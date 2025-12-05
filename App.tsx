@@ -180,6 +180,16 @@ const App: React.FC = () => {
       return;
     }
 
+    const hasGsap = typeof window !== 'undefined' && Boolean((window as any).gsap);
+    if (!hasGsap) {
+      console.warn('[App] GSAP 尚未加载，使用直接切换避免界面被锁定');
+      setCurrentSection(targetSection);
+      setStage('IDLE');
+      setNextSection(null);
+      fromRectRef.current = null;
+      return;
+    }
+
     // STEP 1: Start Exit Animation
     setNextSection(targetSection);
     setStage('EXITING_TEXT');
@@ -205,6 +215,14 @@ const App: React.FC = () => {
   useLayoutEffect(() => {
     if (stage === 'EXPANDING' && fromRectRef.current && overlayRef.current && nextSection) {
       const gsap = (window as any).gsap;
+      if (!gsap) {
+        console.warn('[App] GSAP 不可用，跳过矩形扩展动画');
+        setCurrentSection(nextSection);
+        setStage('IDLE');
+        setNextSection(null);
+        fromRectRef.current = null;
+        return;
+      }
       const overlay = overlayRef.current;
 
       // Reset overlay to start position
@@ -243,6 +261,13 @@ const App: React.FC = () => {
   useLayoutEffect(() => {
     if (stage === 'SWITCHING' && overlayRef.current) {
       const gsap = (window as any).gsap;
+      if (!gsap) {
+        console.warn('[App] GSAP 不可用，直接完成切换');
+        setStage('IDLE');
+        setNextSection(null);
+        fromRectRef.current = null;
+        return;
+      }
       const overlay = overlayRef.current;
       
       // We need a small delay to ensure the new component is fully mounted and reflowed
