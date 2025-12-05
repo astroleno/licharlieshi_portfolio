@@ -1,0 +1,14 @@
+@font-face {
+  font-family: 'Oswald Variable';
+  src: url('/fonts/Oswald-Variable.ttf') format('truetype');
+  font-weight: 200 700; /* Define the range of weights available */
+  font-display: swap;
+}
+
+.font-variable {
+  font-family: 'Oswald Variable', 'Oswald', sans-serif;
+  font-variation-settings: "wght" 700; /* Default weight */
+  /* transition: font-variation-settings 0.1s ease-out; Removed to allow instant JS control */
+  will-change: font-variation-settings, transform; /* Optimize for performance */
+}
+
