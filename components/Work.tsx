@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { PROJECTS } from '../constants';
 import { Project } from '../types';
 import { TransitionContext } from '../App';
 
-const SCROLL_REPEAT_COUNT = 12;
+const SCROLL_REPEAT_COUNT = 8;
 
 const Work: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -14,9 +14,6 @@ const Work: React.FC = () => {
 
   // State to track the last valid video URL for the right side
   const [lastActiveVideoUrl, setLastActiveVideoUrl] = useState<string | undefined>(undefined);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
-
   // Duplicate the projects so we can loop the scroll position without blank gaps
   const infiniteProjects = useMemo(() => (
     Array.from({ length: SCROLL_REPEAT_COUNT }, () => PROJECTS).flat()
@@ -28,96 +25,6 @@ const Work: React.FC = () => {
       setLastActiveVideoUrl(infiniteProjects[0].videoUrl);
     }
   }, [infiniteProjects]);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    const contentEl = listRef.current;
-    if (!container || !contentEl) return;
-
-    let currentSkew = 0;
-    let lastTime = performance.now();
-    const virtualOffsetRef = { current: 0 };
-    const totalHeightRef = { current: contentEl.scrollHeight };
-    const anchorRef = { current: 0 };
-    let isSyncing = false;
-
-    const wrapOffset = (value: number) => {
-      const total = totalHeightRef.current;
-      if (total <= 0) return 0;
-      let result = value % total;
-      if (result < 0) result += total;
-      return result;
-    };
-
-    const applyTransform = () => {
-      if (!listRef.current) return;
-      const translate = -virtualOffsetRef.current;
-      listRef.current.style.transform = `translateY(${translate}px) skewY(${currentSkew}deg)`;
-    };
-
-    const updateMeasurements = () => {
-      totalHeightRef.current = contentEl.scrollHeight;
-      virtualOffsetRef.current = wrapOffset(virtualOffsetRef.current);
-      const maxScroll = Math.max(container.scrollHeight - container.clientHeight, 0);
-      anchorRef.current = maxScroll / 2;
-      isSyncing = true;
-      container.scrollTop = anchorRef.current;
-      requestAnimationFrame(() => { isSyncing = false; });
-    };
-
-    updateMeasurements();
-    virtualOffsetRef.current = wrapOffset(totalHeightRef.current / 2);
-    applyTransform();
-
-    const handleScroll = () => {
-      if (isSyncing) return;
-      const now = performance.now();
-      const dt = now - lastTime;
-      lastTime = now;
-
-      const delta = container.scrollTop - anchorRef.current;
-      if (delta === 0) return;
-
-      virtualOffsetRef.current = wrapOffset(virtualOffsetRef.current + delta);
-      applyTransform();
-
-      const rawVelocity = dt > 0 ? delta / dt : 0;
-      const targetSkew = Math.max(Math.min(rawVelocity * 50, 8), -8);
-      currentSkew += (targetSkew - currentSkew) * 0.1;
-      if (Math.abs(currentSkew) < 0.1) currentSkew = 0;
-      applyTransform();
-
-      isSyncing = true;
-      container.scrollTop = anchorRef.current;
-      requestAnimationFrame(() => { isSyncing = false; });
-    };
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
-
-    let animationId: number;
-    const decaySkew = () => {
-      if (Math.abs(currentSkew) > 0.05) {
-        currentSkew *= 0.92;
-        if (Math.abs(currentSkew) < 0.05) currentSkew = 0;
-        applyTransform();
-      }
-      animationId = requestAnimationFrame(decaySkew);
-    };
-    animationId = requestAnimationFrame(decaySkew);
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateMeasurements();
-      applyTransform();
-    });
-    resizeObserver.observe(container);
-    resizeObserver.observe(contentEl);
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      cancelAnimationFrame(animationId);
-      resizeObserver.disconnect();
-    };
-  }, []);
 
   const handleProjectClick = (project: Project) => {
     setActiveProject(project);
@@ -162,11 +69,9 @@ const Work: React.FC = () => {
     <div className="w-full h-full flex flex-col md:flex-row bg-brand-black relative overflow-hidden">
       {/* Left List */}
       <div 
-        ref={scrollContainerRef}
-        className="w-full md:w-1/2 h-full overflow-y-auto pt-24 pb-12 px-6 md:px-12 flex flex-col justify-center z-20 no-scrollbar"
-        style={{ scrollBehavior: 'auto' }}
+        className="w-full md:w-1/2 h-full overflow-y-auto pt-24 pb-12 px-6 md:px-12 flex flex-col justify-center z-20"
       >
-        <ul ref={listRef} className="space-y-2 transition-all duration-100 ease-linear">
+        <ul className="space-y-2">
           {infiniteProjects.map((project, index) => (
             <li key={`${project.id}-${index}`} className="relative group overflow-hidden">
                 {/* Background Video for Text Mask Effect - Only active on hover */}
