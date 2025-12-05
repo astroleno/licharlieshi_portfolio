@@ -13,6 +13,8 @@ type TransitionStage = 'IDLE' | 'EXITING_TEXT' | 'EXPANDING' | 'SWITCHING' | 'SH
 const App: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<Section>(Section.HOME);
   const [nextSection, setNextSection] = useState<Section | null>(null);
+  const [displayLoader, setDisplayLoader] = useState(true);
+  const [hasLoaderFinished, setHasLoaderFinished] = useState(false);
   
   // Transition State
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -22,7 +24,16 @@ const App: React.FC = () => {
   // Control text visibility globally
   // true = Show Text (Enter/Idle)
   // false = Hide Text (Exit/Transitioning)
-  const isTextVisible = stage === 'IDLE' || stage === 'ENTERING_TEXT';
+  const isTextVisible = hasLoaderFinished && (stage === 'IDLE' || stage === 'ENTERING_TEXT');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timer = window.setTimeout(() => {
+      setDisplayLoader(false);
+      setHasLoaderFinished(true);
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // Helper to get ID based on section
   const getHeroId = (section: Section) => {
@@ -370,6 +381,12 @@ const App: React.FC = () => {
             {currentSection === Section.CONTACT && <Contact />}
         </TransitionContext.Provider>
       </main>
+
+      {displayLoader && (
+        <div className="loading-overlay">
+          <div className="loader-box" aria-label="Loading interface" />
+        </div>
+      )}
     </div>
   );
 };

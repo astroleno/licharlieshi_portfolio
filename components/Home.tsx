@@ -122,14 +122,14 @@ const Home: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center z-10 pointer-events-none mix-blend-difference text-white">
             <div className="flex flex-col items-center">
                 <VelocityText 
-                    content="THE STORY OF" 
+                    content="CREATION OF" 
                     visible={isTextVisible}
                     delay={0.2}
                     className="text-[8vw] md:text-[10vw] font-display font-bold uppercase tracking-tighter text-white"
                 />
                 
                 <VelocityText 
-                    content="SOMETHING VERY SPOOKY" 
+                    content="SOMETHING SPECIAL" 
                     visible={isTextVisible}
                     delay={0.4}
                     className="text-[4vw] md:text-[6vw] font-display font-bold text-white uppercase tracking-tighter mt-[-2vw]"
@@ -142,6 +142,8 @@ const Home: React.FC = () => {
             <img 
               src="https://uploads-ssl.webflow.com/5cff83ac2044e22cb8cf2f11/5d13364599bb70e3560cc4e5_background-min%203.png" 
               alt="Floating Effect"
+              loading="lazy"
+              decoding="async"
               className="home-image w-full h-full object-cover"
             />
           </div>
@@ -154,7 +156,7 @@ const Home: React.FC = () => {
             {/* 小标题 */}
             <div className="mb-3 overflow-hidden">
                 <VelocityText 
-                    content="WELCOME TO THE DARKNESS" 
+                    content="WELCOME TO THE WONDERLAND" 
                     visible={isTextVisible}
                     delay={0.6}
                     className="text-brand-red/80 font-display text-sm md:text-base uppercase tracking-[0.3em]"
