@@ -1,43 +1,127 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+/**
+ * App.tsx
+ * 
+ * 主应用组件
+ * 
+ * 功能说明：
+ * - 管理页面导航和转场动画
+ * - 实现首屏资源预加载，Loading 动画期间加载关键图片
+ * - 使用 React.lazy 实现组件懒加载，减少首屏 JS 包大小
+ * - 提供 TransitionContext 共享文字显隐状态
+ * 
+ * 懒加载策略：
+ * - Home: 首屏组件，同步加载
+ * - Tech/Music/Game/Contact: 懒加载，用户导航时才加载
+ * 
+ * 转场动画：
+ * - 普通页面：红色矩形扩展/收缩动画
+ * - Contact 页面：快门式（Shutter）转场效果
+ */
+
+import React, { useState, useRef, useLayoutEffect, useEffect, Suspense } from 'react';
 import Navigation from './components/Navigation';
 import { VelocityText } from './components/VelocityText';
-import Home from './components/Home';
-import Tech from './components/Tech';
-import Music from './components/Music';
-import Game from './components/Game';
-import Contact from './components/Contact';
+import Home from './components/Home';  // 首屏组件同步加载
 import { Section } from './types';
+import { usePreloadResources, CRITICAL_RESOURCES } from './hooks/usePreloadResources';
 
-// Define transition stages for precise control
-type TransitionStage = 'IDLE' | 'EXITING_TEXT' | 'EXPANDING' | 'SWITCHING' | 'SHRINKING' | 'ENTERING_TEXT';
+// ============================================
+// 懒加载组件配置
+// ============================================
+// 非首屏组件使用 React.lazy 动态导入
+// 这样首屏只需加载 Home 组件的代码，其他组件在导航时按需加载
+
+/** Tech 页面 - 技术作品展示 */
+const Tech = React.lazy(() => import('./components/Tech'));
+
+/** Music 页面 - 音乐作品展示 */
+const Music = React.lazy(() => import('./components/Music'));
+
+/** Game 页面 - 游戏作品展示（含 Unity WebGL） */
+const Game = React.lazy(() => import('./components/Game'));
+
+/** Contact 页面 - 联系方式 */
+const Contact = React.lazy(() => import('./components/Contact'));
+
+// ============================================
+// 懒加载 Fallback 组件
+// ============================================
+/**
+ * 页面加载中的占位组件
+ * 显示简洁的加载动画，与整体设计风格一致
+ */
+const PageLoadingFallback: React.FC = () => (
+  <div className="w-full h-full flex items-center justify-center bg-brand-black">
+    <div className="flex flex-col items-center gap-4">
+      {/* 加载动画 - 使用与主 Loading 一致的样式 */}
+      <div className="loader-box loader-box--small" />
+      <span className="text-white/50 text-sm tracking-widest uppercase">
+        Loading...
+      </span>
+    </div>
+  </div>
+);
+
+// ============================================
+// 类型定义
+// ============================================
+
+/** 转场动画阶段枚举 */
+type TransitionStage = 
+  | 'IDLE'          // 空闲状态
+  | 'EXITING_TEXT'  // 文字退出动画中
+  | 'EXPANDING'     // 红色遮罩扩展中
+  | 'SWITCHING'     // 切换内容中
+  | 'SHRINKING'     // 红色遮罩收缩中
+  | 'ENTERING_TEXT'; // 文字进入动画中
+
+// ============================================
+// 主组件
+// ============================================
 
 const App: React.FC = () => {
+  // ========== 页面状态 ==========
   const [currentSection, setCurrentSection] = useState<Section>(Section.HOME);
   const [nextSection, setNextSection] = useState<Section | null>(null);
-  const [displayLoader, setDisplayLoader] = useState(true);
-  const [hasLoaderFinished, setHasLoaderFinished] = useState(false);
   
-  // Transition State
+  // ========== Loading 状态 ==========
+  // 使用预加载 Hook，等待首屏关键资源加载完成
+  const { isLoaded: resourcesLoaded, progress } = usePreloadResources({
+    images: CRITICAL_RESOURCES.images,
+    timeout: 8000,      // 8 秒超时，避免网络问题阻塞太久
+    minDisplayTime: 1500 // 最少显示 1.5 秒，确保 Loading 动画流畅
+  });
+  
+  // Loading 显示状态：资源未加载完成时显示
+  const displayLoader = !resourcesLoaded;
+  // Loading 完成标记：用于控制文字动画
+  const hasLoaderFinished = resourcesLoaded;
+  
+  // ========== 转场状态 ==========
   const overlayRef = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState<TransitionStage>('IDLE');
   const fromRectRef = useRef<DOMRect | null>(null);
   
-  // Control text visibility globally
-  // true = Show Text (Enter/Idle)
-  // false = Hide Text (Exit/Transitioning)
+  // 文字可见性控制：Loading 完成且处于空闲/进入阶段时显示文字
   const isTextVisible = hasLoaderFinished && (stage === 'IDLE' || stage === 'ENTERING_TEXT');
 
+  // ========== 调试日志 ==========
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const timer = window.setTimeout(() => {
-      setDisplayLoader(false);
-      setHasLoaderFinished(true);
-    }, 2000);
-    return () => window.clearTimeout(timer);
-  }, []);
+    if (progress > 0 && progress < 1) {
+      console.log(`[App] 资源加载进度: ${(progress * 100).toFixed(0)}%`);
+    }
+    if (resourcesLoaded) {
+      console.log('[App] 首屏资源加载完成，隐藏 Loading');
+    }
+  }, [progress, resourcesLoaded]);
 
-  // Helper to get ID based on section
-  const getHeroId = (section: Section) => {
+  // ========== 辅助函数 ==========
+  
+  /**
+   * 根据页面类型获取对应的 Hero 元素 ID
+   * 用于转场动画定位
+   */
+  const getHeroId = (section: Section): string => {
     switch(section) {
       case Section.HOME: return 'hero-home';
       case Section.TECH: return 'hero-tech';
@@ -47,21 +131,23 @@ const App: React.FC = () => {
     }
   };
 
+  // ========== Contact 专用快门转场 ==========
+  
   /**
-   * 专用于第四屏（CONTACT）的快门式转场（方案一：Shutter / Slice）。
-   * 说明：
-   * - 只在“去 CONTACT”或“从 CONTACT 离开”时触发
-   * - 完全作用在 App 级别的 overlay 上，不修改 Contact 内部的滚动 / 变形逻辑
-   * - 步骤：
-   *   1）先让当前屏文字执行 EXITING_TEXT（600ms）
-   *   2）创建若干竖向条带（shutter），从下往上合拢遮住旧画面
-   *   3）合拢完成后切换 currentSection
-   *   4）再让条带从上往下打开，露出新画面，同时触发 ENTERING_TEXT
+   * Contact 页面专用的快门式转场动画
+   * 
+   * 效果说明：
+   * - 多个竖向条带从下往上合拢，遮住旧画面
+   * - 切换内容后，条带从上往下打开，露出新画面
+   * - 产生类似电影快门的视觉效果
+   * 
+   * @param targetSection - 目标页面
    */
   const runContactShutterTransition = (targetSection: Section) => {
     try {
       const gsap = (window as any).gsap;
       const overlay = overlayRef.current;
+      
       if (!gsap || !overlay) {
         console.warn('[App] CONTACT 快门转场无法初始化（gsap 或 overlay 不存在），直接跳转');
         setCurrentSection(targetSection);
@@ -81,7 +167,7 @@ const App: React.FC = () => {
           const viewportWidth = window.innerWidth;
           const viewportHeight = window.innerHeight;
 
-          // 清空之前可能残留的子节点（防御性处理）
+          // 清空之前可能残留的子节点
           overlay.innerHTML = '';
 
           gsap.set(overlay, {
@@ -98,7 +184,7 @@ const App: React.FC = () => {
           });
 
           // 3. 创建竖向条带（shutter slices）
-          const sliceCount = 7; // 7 条竖向条，数字可调
+          const sliceCount = 7;
           const sliceWidth = viewportWidth / sliceCount;
           const slices: HTMLDivElement[] = [];
 
@@ -117,28 +203,23 @@ const App: React.FC = () => {
             slices.push(slice);
           }
 
-          // 4. 条带合拢：旧画面被完全遮挡
-          setStage('EXPANDING'); // 复用语义：遮挡阶段
+          // 4. 条带合拢动画
+          setStage('EXPANDING');
 
           gsap.to(slices, {
             scaleY: 1,
             duration: 0.35,
             ease: 'power3.inOut',
             stagger: {
-              // 交替方向的交错，增加节奏感
               each: 0.03,
               from: 'edges',
             },
             onComplete: () => {
               try {
-                // 完全遮挡后，安全切换内容
+                // 完全遮挡后，切换内容
                 setCurrentSection(targetSection);
 
-                // 5. 条带打开：露出新画面
-                //   关键：先让新屏以 isTextVisible = false 挂载一帧，
-                //   再在条带打开的 onStart 中切换到 ENTERING_TEXT，
-                //   这样文字可以从“隐藏 → 显示”完整执行入场动画。
-                //   使用 requestAnimationFrame 确保 React 已经完成渲染
+                // 5. 条带打开动画
                 requestAnimationFrame(() => {
                   requestAnimationFrame(() => {
                     gsap.to(slices, {
@@ -151,11 +232,10 @@ const App: React.FC = () => {
                         from: 'center',
                       },
                       onStart: () => {
-                        // 允许新屏文字开始进场
                         setStage('ENTERING_TEXT');
                       },
                       onComplete: () => {
-                        // 6. 清理 overlay，回到空闲状态
+                        // 6. 清理并回到空闲状态
                         console.log('[App] CONTACT 快门式转场结束');
                         overlay.innerHTML = '';
                         gsap.set(overlay, { display: 'none', opacity: 0 });
@@ -173,13 +253,12 @@ const App: React.FC = () => {
           });
         } catch (errorInner) {
           console.error('[App] CONTACT 快门式转场初始化出错', errorInner);
-          // 发生异常时回退为直接切屏，避免死锁
           setCurrentSection(targetSection);
           setStage('IDLE');
           setNextSection(null);
           fromRectRef.current = null;
         }
-      }, 600); // 与 VelocityText EXIT 时间对齐
+      }, 600);
     } catch (errorOuter) {
       console.error('[App] CONTACT 快门式转场外部异常', errorOuter);
       setCurrentSection(targetSection);
@@ -189,18 +268,27 @@ const App: React.FC = () => {
     }
   };
 
+  // ========== 导航处理 ==========
+  
+  /**
+   * 处理页面导航
+   * 
+   * @param targetSection - 目标页面
+   */
   const handleNavigate = (targetSection: Section) => {
+    // 防止重复导航或转场中导航
     if (targetSection === currentSection || stage !== 'IDLE') return;
 
-    // ========== 特殊处理：第四屏 CONTACT 使用快门式转场 ==========
+    // Contact 页面使用快门式转场
     if (targetSection === Section.CONTACT || currentSection === Section.CONTACT) {
       runContactShutterTransition(targetSection);
       return;
     }
 
+    // 检查 GSAP 是否可用
     const hasGsap = typeof window !== 'undefined' && Boolean((window as any).gsap);
     if (!hasGsap) {
-      console.warn('[App] GSAP 尚未加载，使用直接切换避免界面被锁定');
+      console.warn('[App] GSAP 尚未加载，使用直接切换');
       setCurrentSection(targetSection);
       setStage('IDLE');
       setNextSection(null);
@@ -208,28 +296,29 @@ const App: React.FC = () => {
       return;
     }
 
-    // STEP 1: Start Exit Animation
+    // 开始普通转场：文字退出 → 扩展遮罩 → 切换 → 收缩遮罩 → 文字进入
     setNextSection(targetSection);
     setStage('EXITING_TEXT');
     
-    // Wait for text to exit (0.6s) before expanding overlay
+    // 等待文字退出后开始扩展动画
     setTimeout(() => {
-        const currentHeroId = getHeroId(currentSection);
-        const currentEl = document.getElementById(currentHeroId);
-        
-        if (currentEl) {
-          fromRectRef.current = currentEl.getBoundingClientRect();
-          setStage('EXPANDING');
-        } else {
-          setCurrentSection(targetSection);
-          setStage('ENTERING_TEXT');
-          // Wait for enter animation
-          setTimeout(() => setStage('IDLE'), 1000); 
-        }
+      const currentHeroId = getHeroId(currentSection);
+      const currentEl = document.getElementById(currentHeroId);
+      
+      if (currentEl) {
+        fromRectRef.current = currentEl.getBoundingClientRect();
+        setStage('EXPANDING');
+      } else {
+        setCurrentSection(targetSection);
+        setStage('ENTERING_TEXT');
+        setTimeout(() => setStage('IDLE'), 1000);
+      }
     }, 600);
   };
 
-  // EFFECT 1: Handle Expansion (Step 2 & 3)
+  // ========== 转场动画效果 ==========
+  
+  // EFFECT 1: 处理遮罩扩展动画
   useLayoutEffect(() => {
     if (stage === 'EXPANDING' && fromRectRef.current && overlayRef.current && nextSection) {
       const gsap = (window as any).gsap;
@@ -241,23 +330,24 @@ const App: React.FC = () => {
         fromRectRef.current = null;
         return;
       }
+      
       const overlay = overlayRef.current;
 
-      // Reset overlay to start position
+      // 设置遮罩初始位置（当前 Hero 元素位置）
       gsap.set(overlay, {
         position: 'fixed',
         top: fromRectRef.current.top,
         left: fromRectRef.current.left,
         width: fromRectRef.current.width,
         height: fromRectRef.current.height,
-        backgroundColor: '#CE0000', // Brand Red
+        backgroundColor: '#CE0000',
         zIndex: 100,
         display: 'block',
         opacity: 1,
         borderRadius: '0px'
       });
 
-      // Animate to Full Screen
+      // 扩展到全屏
       gsap.to(overlay, {
         top: 0,
         left: 0,
@@ -266,7 +356,6 @@ const App: React.FC = () => {
         duration: 0.6,
         ease: "power3.inOut",
         onComplete: () => {
-          // Once full screen, trigger the content switch
           setCurrentSection(nextSection);
           setStage('SWITCHING');
         }
@@ -274,8 +363,7 @@ const App: React.FC = () => {
     }
   }, [stage, nextSection]);
 
-  // EFFECT 2: Handle Shrinking (Step 4 & 5)
-  // This runs after currentSection has updated and the new DOM is ready
+  // EFFECT 2: 处理遮罩收缩动画
   useLayoutEffect(() => {
     if (stage === 'SWITCHING' && overlayRef.current) {
       const gsap = (window as any).gsap;
@@ -286,15 +374,15 @@ const App: React.FC = () => {
         fromRectRef.current = null;
         return;
       }
+      
       const overlay = overlayRef.current;
       
-      // We need a small delay to ensure the new component is fully mounted and reflowed
       requestAnimationFrame(() => {
         const targetId = getHeroId(currentSection);
         const targetEl = document.getElementById(targetId);
 
         if (targetEl) {
-          // === 特殊处理：第三屏 Music 不做矩形收缩，只做淡出，让字本身承担转场 ===
+          // Music 页面特殊处理：只做淡出
           if (currentSection === Section.MUSIC) {
             setStage('SHRINKING');
 
@@ -303,7 +391,6 @@ const App: React.FC = () => {
               duration: 0.6,
               ease: "power2.out",
               onStart: () => {
-                // Music 使用 VelocityText 的 zoom 模式来完成"全屏字 -> 正常字"的转场
                 setStage('ENTERING_TEXT');
               },
               onComplete: () => {
@@ -314,7 +401,7 @@ const App: React.FC = () => {
               }
             });
           } else {
-            // 其它页面仍然使用矩形缩放到目标容器的效果
+            // 其它页面：收缩到目标 Hero 元素
             const toRect = targetEl.getBoundingClientRect();
             
             setStage('SHRINKING');
@@ -327,26 +414,23 @@ const App: React.FC = () => {
               duration: 0.8,
               ease: "power4.out",
               onStart: () => {
-                // 短暂延迟后触发文字进场，让文字和幕布动作更贴合
                 setTimeout(() => {
                   setStage('ENTERING_TEXT');
                 }, 100);
               },
               onComplete: () => {
-                // Cleanup
                 gsap.set(overlay, { display: 'none', opacity: 0 });
                 
-                // 等待文字动画结束再回到 IDLE
                 setTimeout(() => {
-                    setStage('IDLE');
-                    setNextSection(null);
-                    fromRectRef.current = null;
+                  setStage('IDLE');
+                  setNextSection(null);
+                  fromRectRef.current = null;
                 }, 800);
               }
             });
           }
         } else {
-          // Fallback
+          // 回退：淡出
           gsap.to(overlay, {
             opacity: 0,
             duration: 0.5,
@@ -361,46 +445,66 @@ const App: React.FC = () => {
     }
   }, [stage, currentSection]);
 
+  // ========== 渲染 ==========
+  
   return (
     <div className="flex w-full h-screen bg-brand-black text-white font-sans overflow-hidden relative">
-      {/* 
-        Unified Transition Overlay 
-        Starts as red block matching 'from' element -> Full Screen -> Shrinks to 'to' element
-      */}
+      {/* 转场遮罩层 */}
       <div 
         ref={overlayRef}
         className="hidden pointer-events-none fixed bg-brand-red z-[100]"
       />
 
-      {/* Navigation Sidebar */}
+      {/* 侧边导航 */}
       <Navigation currentSection={currentSection} onNavigate={handleNavigate} />
 
-      {/* Main Content Area - Pass visible state to children */}
+      {/* 主内容区域 */}
       <main className="flex-1 ml-12 md:ml-16 h-full relative overflow-hidden">
-        {/* We clone the element to pass props, or use Context if it gets complex. 
-            For now, let's pass it explicitly if possible, or use a Context.
-            Actually, let's use a simple React Context to share visibility state.
-        */}
         <TransitionContext.Provider value={{ isTextVisible }}>
-            {currentSection === Section.HOME && <Home />}
+          {/* 首屏组件 - 同步加载 */}
+          {currentSection === Section.HOME && <Home />}
+          
+          {/* 非首屏组件 - 懒加载，使用 Suspense 包裹 */}
+          <Suspense fallback={<PageLoadingFallback />}>
             {currentSection === Section.TECH && <Tech />}
             {currentSection === Section.MUSIC && <Music />}
             {currentSection === Section.GAME && <Game />}
             {currentSection === Section.CONTACT && <Contact />}
+          </Suspense>
         </TransitionContext.Provider>
       </main>
 
+      {/* Loading 遮罩层 - 首屏资源加载完成前显示 */}
       {displayLoader && (
         <div className="loading-overlay">
           <div className="loader-box" aria-label="Loading interface" />
+          {/* 可选：显示加载进度 */}
+          {/* <div className="absolute bottom-8 text-white/30 text-xs">
+            {(progress * 100).toFixed(0)}%
+          </div> */}
         </div>
       )}
     </div>
   );
 };
 
-// Create a simple context for children to know if they should show text
+// ============================================
+// Context 导出
+// ============================================
+
+/**
+ * 转场状态 Context
+ * 
+ * 提供给子组件判断当前文字是否应该显示
+ * 用于配合 VelocityText 组件的进出场动画
+ */
 export const TransitionContext = React.createContext({ isTextVisible: true });
+
+/**
+ * 获取转场状态的 Hook
+ * 
+ * @returns {{ isTextVisible: boolean }} - 文字是否可见
+ */
 export const useTransitionContext = () => React.useContext(TransitionContext);
 
 export default App;
