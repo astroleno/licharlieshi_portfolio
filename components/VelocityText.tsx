@@ -28,6 +28,8 @@ export const VelocityText: React.FC<VelocityTextProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  // 追踪上一次的 visible 状态，避免重复触发
+  const prevVisibleRef = useRef<boolean | null>(null);
   
   /**
    * 第一个 effect：只负责「创建时间线」与初始状态，不关心 visible。
@@ -154,20 +156,26 @@ export const VelocityText: React.FC<VelocityTextProps> = ({
     const tl = timelineRef.current;
     if (!tl) return;
 
+    // 防止重复触发：只在 visible 真正变化时才执行
+    if (prevVisibleRef.current === visible) return;
+    prevVisibleRef.current = visible;
+
     try {
       if (visible) {
         // 切入：从起点正向播放
+        console.log('[VelocityText] 播放入场动画:', content.substring(0, 15));
         tl.timeScale(1);
         tl.play(0);
       } else {
         // 切出：从当前进度反向播放到 0，得到 exactly 反向的轨迹
+        console.log('[VelocityText] 播放退场动画:', content.substring(0, 15));
         tl.timeScale(1);
         tl.reverse();
       }
     } catch (error) {
       console.error('[VelocityText] 可见性切换时出错', error);
     }
-  }, [visible, variant]);
+  }, [visible, variant, content]);
 
   /**
    * 第三个 effect：专门给 zoom 模式（第三屏 WHO）使用，恢复稳定的缩放逻辑
@@ -257,12 +265,12 @@ export const VelocityText: React.FC<VelocityTextProps> = ({
       {/* 
         我们渲染三层完全一样的文字，完全重叠
         Layer 0: 主文字 (White/Current Color)
-        Layer 1: 残影 1 (Brand Red - 60%)
-        Layer 2: 残影 2 (Brand Red - 30%)
+        Layer 1: 残影 1 (继承当前颜色 - 60%)
+        Layer 2: 残影 2 (继承当前颜色 - 30%)
       */}
 
       {/* Layer 2: 最底层的残影 (拖尾最长) - 初始透明度为0 */}
-      <div className="absolute top-0 left-0 flex select-none pointer-events-none text-[#FF0000] mix-blend-screen" aria-hidden="true">
+      <div className="absolute top-0 left-0 flex select-none pointer-events-none mix-blend-screen" aria-hidden="true">
         {characters.map((char, i) => (
           // 使用 opacity-0 作为 CSS 初始状态，避免首帧闪烁
           <span key={`g2-${i}`} className="ghost-2-char inline-block origin-bottom-left will-change-transform opacity-0">
@@ -272,7 +280,7 @@ export const VelocityText: React.FC<VelocityTextProps> = ({
       </div>
 
       {/* Layer 1: 中间层的残影 - 初始透明度为0 */}
-      <div className="absolute top-0 left-0 flex select-none pointer-events-none text-[#CE0000] mix-blend-screen" aria-hidden="true">
+      <div className="absolute top-0 left-0 flex select-none pointer-events-none mix-blend-screen" aria-hidden="true">
         {characters.map((char, i) => (
           <span key={`g1-${i}`} className="ghost-1-char inline-block origin-bottom-left will-change-transform opacity-0">
             {char}

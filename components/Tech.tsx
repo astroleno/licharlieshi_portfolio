@@ -5,10 +5,11 @@ import { TransitionContext } from '../App';
 
 const SCROLL_REPEAT_COUNT = 8;
 
-const Work: React.FC = () => {
+const Tech: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isHeroVideoReady, setHeroVideoReady] = useState(false);
+  const [isTechnicalDetailsOpen, setIsTechnicalDetailsOpen] = useState(true);
   
   // Transition context to control visibility
   const { isTextVisible } = useContext(TransitionContext);
@@ -109,10 +110,12 @@ const Work: React.FC = () => {
 
   const handleProjectClick = (project: Project) => {
     setActiveProject(project);
+    setIsTechnicalDetailsOpen(true);
   };
 
   const handleClose = () => {
     setActiveProject(null);
+    setIsTechnicalDetailsOpen(true);
   };
 
   const handleNext = () => {
@@ -120,6 +123,7 @@ const Work: React.FC = () => {
     const currentIndex = PROJECTS.findIndex(p => p.id === activeProject.id);
     const nextIndex = (currentIndex + 1) % PROJECTS.length;
     setActiveProject(PROJECTS[nextIndex]);
+    setIsTechnicalDetailsOpen(true);
   };
 
   const handlePrev = () => {
@@ -127,6 +131,7 @@ const Work: React.FC = () => {
     const currentIndex = PROJECTS.findIndex(p => p.id === activeProject.id);
     const prevIndex = (currentIndex - 1 + PROJECTS.length) % PROJECTS.length;
     setActiveProject(PROJECTS[prevIndex]);
+    setIsTechnicalDetailsOpen(true);
   };
 
   // Auto-close detail when App starts transition (to ensure hero-work is always available)
@@ -246,7 +251,7 @@ const Work: React.FC = () => {
 
       {/* Right Visual Area - Video Player */}
       <div 
-        id="hero-work"
+        id="hero-tech"
         ref={heroVideoContainerRef}
         className="hidden md:block w-1/2 h-full bg-brand-black relative transition-all duration-500 ease-in-out overflow-hidden"
       >
@@ -283,7 +288,7 @@ const Work: React.FC = () => {
         </div>
 
         {/* Left Content Column */}
-        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-20 relative bg-brand-black">
+        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-20 relative bg-brand-black overflow-y-auto">
           {/* Meta Info */}
           <div className="flex flex-col gap-1 mb-2">
             <span className="text-xs font-mono text-gray-400">{activeProject.year}</span>
@@ -291,28 +296,156 @@ const Work: React.FC = () => {
           </div>
 
           {/* Title */}
-          <h2 className="text-[15vw] md:text-[8rem] font-display font-bold leading-[0.85] mb-8 uppercase text-white tracking-tighter">
+          <h2 className="text-[15vw] md:text-[6rem] font-display font-bold leading-[0.85] mb-4 uppercase text-white tracking-tighter">
             {activeProject.name}
           </h2>
 
+          {/* Subtitle */}
+          <p className="text-sm md:text-base font-bold leading-tight mb-6 text-gray-400 tracking-wide">
+            {activeProject.subtitle}
+          </p>
+
+          {/* Role */}
+          <div className="mb-6">
+            <span className="text-[10px] text-gray-500 block mb-1 tracking-widest">ROLE :</span>
+            <div className="text-xs md:text-sm font-bold uppercase tracking-wide text-white">
+              {activeProject.role}
+            </div>
+          </div>
+
+          {/* Collaborators (if exists) */}
+          {activeProject.collaborators && activeProject.collaborators.length > 0 && (
+            <div className="mb-6">
+              <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">COLLABORATORS :</span>
+              <div className="text-xs text-gray-400 space-y-1">
+                {activeProject.collaborators.map((collaborator, index) => (
+                  <div key={index}>• {collaborator}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Paper Submission (if exists) */}
+          {activeProject.paperSubmission && (
+            <div className="mb-6">
+              <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">PAPER SUBMISSION :</span>
+              <div className="text-xs text-brand-red font-bold">
+                {activeProject.paperSubmission}
+                {activeProject.links?.conference && (
+                  <>
+                    {' '}
+                    <a 
+                      href={activeProject.links.conference}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 hover:underline"
+                    >
+                      [Conference Link →]
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Description */}
-          <p className="text-xs md:text-sm font-bold leading-relaxed max-w-md mb-12 uppercase text-gray-300 tracking-wide">
+          <p className="text-xs md:text-sm leading-relaxed max-w-md mb-8 text-gray-300">
             {activeProject.description}
           </p>
 
           {/* Stack */}
-          <div className="mb-16">
+          <div className="mb-8">
              <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">STACK :</span>
-             <div className="text-base md:text-xl font-bold uppercase tracking-wide">
+             <div className="text-sm md:text-base font-bold uppercase tracking-wide">
                {activeProject.tags.join(' / ')}
              </div>
           </div>
 
-          {/* CTA */}
-          <button className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors">
-            See it live
-            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-          </button>
+          {/* Technical Details (collapsible if exists) */}
+          {activeProject.technicalDetails && (
+            <div className="mb-8">
+              <button
+                onClick={() => setIsTechnicalDetailsOpen(!isTechnicalDetailsOpen)}
+                className="w-full text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] text-gray-500 tracking-widest uppercase">
+                    {activeProject.technicalDetails.title} :
+                  </span>
+                  <span className="text-gray-500 text-sm transition-transform duration-300" style={{ transform: isTechnicalDetailsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    ▼
+                  </span>
+                </div>
+              </button>
+              
+              <div 
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{ 
+                  maxHeight: isTechnicalDetailsOpen ? '1000px' : '0',
+                  opacity: isTechnicalDetailsOpen ? 1 : 0 
+                }}
+              >
+                <div className="pt-2 space-y-3">
+                  {/* Overview */}
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    {activeProject.technicalDetails.overview}
+                  </p>
+                  
+                  {/* Components */}
+                  {activeProject.technicalDetails.components && activeProject.technicalDetails.components.length > 0 && (
+                    <div>
+                      <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">KEY COMPONENTS :</span>
+                      <ul className="text-xs text-gray-400 space-y-1">
+                        {activeProject.technicalDetails.components.map((component, index) => (
+                          <li key={index}>• {component}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Links */}
+          {activeProject.links && (
+            <div className="flex gap-6">
+              {activeProject.links.github && (
+                <a 
+                  href={activeProject.links.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors"
+                >
+                  GitHub
+                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </a>
+              )}
+              {activeProject.links.live && (
+                <a 
+                  href={activeProject.links.live}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors"
+                >
+                  See it live
+                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </a>
+              )}
+              {/* Only show conference link if there's no paper submission */}
+              {activeProject.links.conference && !activeProject.paperSubmission && (
+                <a 
+                  href={activeProject.links.conference}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors"
+                >
+                  Conference
+                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Visual Column */}
@@ -353,4 +486,4 @@ const Work: React.FC = () => {
   );
 };
 
-export default Work;
+export default Tech;

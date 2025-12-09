@@ -9,8 +9,8 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ currentSection, onNavigate }) => {
   const navItems = [
     { id: Section.HOME, label: 'HOME' },
-    { id: Section.WORK, label: 'WORK' },
-    { id: Section.ABOUT, label: 'ABOUT' },
+    { id: Section.TECH, label: 'TECH' },
+    { id: Section.MUSIC, label: 'MUSIC' },
     { id: Section.CONTACT, label: 'CONTACT' },
   ];
 

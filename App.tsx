@@ -2,8 +2,8 @@ import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import Navigation from './components/Navigation';
 import { VelocityText } from './components/VelocityText';
 import Home from './components/Home';
-import Work from './components/Work';
-import About from './components/About';
+import Tech from './components/Tech';
+import Music from './components/Music';
 import Contact from './components/Contact';
 import { Section } from './types';
 
@@ -39,8 +39,8 @@ const App: React.FC = () => {
   const getHeroId = (section: Section) => {
     switch(section) {
       case Section.HOME: return 'hero-home';
-      case Section.WORK: return 'hero-work';
-      case Section.ABOUT: return 'hero-about';
+      case Section.TECH: return 'hero-tech';
+      case Section.MUSIC: return 'hero-music';
       case Section.CONTACT: return 'hero-contact';
     }
   };
@@ -136,28 +136,33 @@ const App: React.FC = () => {
                 //   关键：先让新屏以 isTextVisible = false 挂载一帧，
                 //   再在条带打开的 onStart 中切换到 ENTERING_TEXT，
                 //   这样文字可以从“隐藏 → 显示”完整执行入场动画。
-                gsap.to(slices, {
-                  scaleY: 0,
-                  transformOrigin: '50% 0%', // 自上而下打开
-                  duration: 0.35,
-                  ease: 'power3.inOut',
-                  stagger: {
-                    each: 0.03,
-                    from: 'center',
-                  },
-                  onStart: () => {
-                    // 允许新屏文字开始进场
-                    setStage('ENTERING_TEXT');
-                  },
-                  onComplete: () => {
-                    // 6. 清理 overlay，回到空闲状态
-                    console.log('[App] CONTACT 快门式转场结束');
-                    overlay.innerHTML = '';
-                    gsap.set(overlay, { display: 'none', opacity: 0 });
-                    setStage('IDLE');
-                    setNextSection(null);
-                    fromRectRef.current = null;
-                  },
+                //   使用 requestAnimationFrame 确保 React 已经完成渲染
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    gsap.to(slices, {
+                      scaleY: 0,
+                      transformOrigin: '50% 0%', // 自上而下打开
+                      duration: 0.35,
+                      ease: 'power3.inOut',
+                      stagger: {
+                        each: 0.03,
+                        from: 'center',
+                      },
+                      onStart: () => {
+                        // 允许新屏文字开始进场
+                        setStage('ENTERING_TEXT');
+                      },
+                      onComplete: () => {
+                        // 6. 清理 overlay，回到空闲状态
+                        console.log('[App] CONTACT 快门式转场结束');
+                        overlay.innerHTML = '';
+                        gsap.set(overlay, { display: 'none', opacity: 0 });
+                        setStage('IDLE');
+                        setNextSection(null);
+                        fromRectRef.current = null;
+                      },
+                    });
+                  });
                 });
               } catch (innerError) {
                 console.error('[App] CONTACT 快门式转场（打开阶段）出错', innerError);
@@ -287,8 +292,8 @@ const App: React.FC = () => {
         const targetEl = document.getElementById(targetId);
 
         if (targetEl) {
-          // === 特殊处理：第三屏 About 不做矩形收缩，只做淡出，让字本身承担转场 ===
-          if (currentSection === Section.ABOUT) {
+          // === 特殊处理：第三屏 Music 不做矩形收缩，只做淡出，让字本身承担转场 ===
+          if (currentSection === Section.MUSIC) {
             setStage('SHRINKING');
 
             gsap.to(overlay, {
@@ -296,7 +301,7 @@ const App: React.FC = () => {
               duration: 0.6,
               ease: "power2.out",
               onStart: () => {
-                // About 使用 VelocityText 的 zoom 模式来完成“全屏字 -> 正常字”的转场
+                // Music 使用 VelocityText 的 zoom 模式来完成"全屏字 -> 正常字"的转场
                 setStage('ENTERING_TEXT');
               },
               onComplete: () => {
@@ -376,8 +381,8 @@ const App: React.FC = () => {
         */}
         <TransitionContext.Provider value={{ isTextVisible }}>
             {currentSection === Section.HOME && <Home />}
-            {currentSection === Section.WORK && <Work />}
-            {currentSection === Section.ABOUT && <About />}
+            {currentSection === Section.TECH && <Tech />}
+            {currentSection === Section.MUSIC && <Music />}
             {currentSection === Section.CONTACT && <Contact />}
         </TransitionContext.Provider>
       </main>

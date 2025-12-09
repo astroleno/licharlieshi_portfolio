@@ -242,7 +242,7 @@ const Contact: React.FC = () => {
               fontWeight="900"
               style={{ fontFamily: 'Oswald, sans-serif', letterSpacing: '-0.02em' }}
             >
-              <tspan x="0.5" dy="-0.6em">LISTEN</tspan>
+              <tspan x="0.5" dy="-0.6em">CONTACT</tspan>
               <tspan x="0.5" dy="1.2em">NOW</tspan>
             </text>
             <rect 
@@ -283,9 +283,9 @@ const Contact: React.FC = () => {
             className="w-full h-full object-cover transform scale-105"
             autoPlay 
             muted 
-            loop 
-            playsInline
-            src="/a.webm"
+            // loop
+            playsInline // 只播放一次
+            src="/contact.webm"
           />
           <div className="absolute inset-0 bg-brand-black -z-10" />
         </div>
