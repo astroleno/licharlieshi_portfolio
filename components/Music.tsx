@@ -9,10 +9,10 @@ import { MusicProjectList } from './MusicProjectList';
  * 
  * 布局结构：
  * - 顶部区域：展示巨大的 "MUSIC" 标题（默认）或项目列表（激活状态）
- *   - 默认高度：75vh
+ *   - 默认高度：80vh
  *   - 激活高度：90vh（展开显示更多内容）
  * - 底部区域：分类导航
- *   - 默认高度：25vh
+ *   - 默认高度：20vh
  *   - 激活高度：10vh（收缩为紧凑模式）
  *   - 交互：
  *     - Hover：底部分类悬浮时，上方 MUSIC 文字显示对应视频遮罩效果
@@ -72,7 +72,7 @@ const Music: React.FC = () => {
       <div 
         id="hero-music"
         className={`relative w-full overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.76,0,0.24,1)] ${
-          isExpanded ? 'h-[90vh]' : 'h-[75vh]'
+          isExpanded ? 'h-[90vh]' : 'h-[80vh]'
         }`}
       >
         
@@ -152,7 +152,7 @@ const Music: React.FC = () => {
       {/* Bottom Section - Category Navigation */}
       <div 
         className={`w-full relative z-30 flex items-center transition-all duration-700 ease-[cubic-bezier(0.76,0,0.24,1)] ${
-          isExpanded ? 'h-[10vh] bg-black' : 'h-[25vh] bg-brand-red'
+          isExpanded ? 'h-[10vh] bg-black' : 'h-[20vh] bg-brand-red'
         }`}
       >
         {/* 内部容器 - 负责水平均匀分布4个分类 */}

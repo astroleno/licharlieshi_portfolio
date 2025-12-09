@@ -11,6 +11,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentSection, onNavigate }) =
     { id: Section.HOME, label: 'HOME' },
     { id: Section.TECH, label: 'TECH' },
     { id: Section.MUSIC, label: 'MUSIC' },
+    { id: Section.GAME, label: 'GAME' },
     { id: Section.CONTACT, label: 'CONTACT' },
   ];
 

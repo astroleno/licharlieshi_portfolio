@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Portfolio Game - Unity WebGL</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <style>
+      /* 简化样式，移除Unity默认的UI装饰，使其更好地融入portfolio */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        background: #000000;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      
+      #unity-container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: #000000;
+      }
+      
+      #unity-canvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        cursor: default;
+        background: #000000;
+        display: block;
+      }
+      
+      /* 加载进度条 */
+      #unity-loading-bar {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+      
+      #unity-logo {
+        width: 80px;
+        height: 80px;
+        background: url('TemplateData/unity-logo-dark.png') no-repeat center;
+        background-size: contain;
+      }
+      
+      #unity-progress-bar-empty {
+        width: 300px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        background: #CE0000; /* Portfolio品牌红色 */
+        border-radius: 2px;
+        transition: width 0.1s;
+      }
+      
+      #unity-loading-text {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      
+      /* 警告/错误提示 */
+      #unity-warning {
+        position: absolute;
+        left: 50%;
+        top: 20px;
+        transform: translateX(-50%);
+        max-width: 80%;
+        z-index: 1000;
+      }
+      
+      #unity-warning > div {
+        padding: 12px 20px;
+        background: rgba(206, 0, 0, 0.9);
+        color: white;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      }
+      
+      /* 移除Unity默认的footer */
+      #unity-footer {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      
+      <!-- 加载进度条 -->
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+        <div id="unity-loading-text">Loading Game...</div>
+      </div>
+      
+      <!-- 警告/错误信息容器 -->
+      <div id="unity-warning"></div>
+      
+      <!-- 隐藏的footer（保留用于兼容性） -->
+      <div id="unity-footer" style="display:none;">
+        <div id="unity-webgl-logo"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">PortfolioGame</div>
+      </div>
+    </div>
+    
+    <script>
+      // Unity容器和UI元素引用
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var loadingText = document.querySelector("#unity-loading-text");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      /**
+       * Unity错误/警告消息显示函数
+       * @param {string} msg - 消息内容
+       * @param {string} type - 消息类型：'error' 或 'warning'
+       */
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        
+        if (type == 'error') {
+          div.style.background = 'rgba(206, 0, 0, 0.9)';
+          div.style.padding = '12px 20px';
+        } else if (type == 'warning') {
+          div.style.background = 'rgba(255, 193, 7, 0.9)';
+          div.style.color = '#000';
+          div.style.padding = '12px 20px';
+          // 警告消息5秒后自动消失
+          setTimeout(function() {
+            if (warningBanner.contains(div)) {
+              warningBanner.removeChild(div);
+              updateBannerVisibility();
+            }
+          }, 5000);
+        }
+        
+        updateBannerVisibility();
+      }
+
+      // Unity构建文件路径配置
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/webgl_test.loader.js";
+      
+      // Unity实例配置
+      var config = {
+        dataUrl: buildUrl + "/webgl_test.data.br",
+        frameworkUrl: buildUrl + "/webgl_test.framework.js.br",
+        codeUrl: buildUrl + "/webgl_test.wasm.br",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "PortfolioGame",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+        // Ensure canvas matches container size properly
+        matchWebGLToCanvasSize: true,
+      };
+
+      // 移动设备检测和配置
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // 移动设备：全屏显示
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        
+        container.className = "unity-mobile";
+        canvas.className = "unity-mobile";
+        
+        // 降低移动设备分辨率以提升性能（可选）
+        // config.devicePixelRatio = 1;
+      } else {
+        // 桌面设备：响应式canvas
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+      }
+
+      // 显示加载进度条
+      loadingBar.style.display = "flex";
+
+      // 动态加载Unity loader脚本
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      
+      script.onload = () => {
+        // 创建Unity实例
+        createUnityInstance(canvas, config, (progress) => {
+          // 更新加载进度
+          progressBarFull.style.width = 100 * progress + "%";
+          
+          // 更新加载文字
+          var percentage = Math.round(progress * 100);
+          loadingText.textContent = "Loading... " + percentage + "%";
+        })
+        .then((unityInstance) => {
+          // Unity加载完成
+          console.log('[Portfolio Game] Unity实例创建成功');
+          
+          // Store unity instance globally for resize handling
+          window.unityInstance = unityInstance;
+          
+          // 隐藏加载进度条
+          loadingBar.style.display = "none";
+          
+          // 配置全屏按钮（虽然在iframe中不显示，但保留功能）
+          if (fullscreenButton) {
+            fullscreenButton.onclick = () => {
+              unityInstance.SetFullscreen(1);
+            };
+          }
+          
+          // Handle window resize and fullscreen changes
+          var isResizing = false;
+          var handleResize = function() {
+            if (isResizing) return;
+            isResizing = true;
+            
+            requestAnimationFrame(function() {
+              if (canvas) {
+                // Get current container size
+                var container = canvas.parentElement;
+                if (container) {
+                  // Force canvas to match container dimensions
+                  canvas.width = container.clientWidth || window.innerWidth;
+                  canvas.height = container.clientHeight || window.innerHeight;
+                  canvas.style.width = "100%";
+                  canvas.style.height = "100%";
+                }
+              }
+              isResizing = false;
+            });
+          };
+          
+          // Listen to both resize and fullscreen events
+          window.addEventListener('resize', handleResize);
+          document.addEventListener('fullscreenchange', function() {
+            console.log('[Portfolio Game] Fullscreen changed:', !!document.fullscreenElement);
+            setTimeout(handleResize, 50);
+          });
+          
+          // Game pause state
+          var isPaused = false;
+          
+          // Function to pause game
+          window.pauseGame = function() {
+            if (!isPaused && unityInstance) {
+              isPaused = true;
+              // Try to pause using Emscripten API
+              try {
+                if (unityInstance.Module && unityInstance.Module.pauseMainLoop) {
+                  unityInstance.Module.pauseMainLoop();
+                }
+              } catch(e) {
+                console.log('[Portfolio Game] Module pause not available');
+              }
+              // Suspend audio context
+              try {
+                // 尝试暂停所有可能的 AudioContext
+                var candidates = [
+                  unityInstance.Module && unityInstance.Module.audioContext,
+                  unityInstance.audioContext,
+                  (unityInstance.Module && unityInstance.Module.SDL && unityInstance.Module.SDL.audioContext),
+                  (unityInstance.Module && unityInstance.Module.SDL2 && unityInstance.Module.SDL2.audioContext)
+                ].filter(Boolean);
+                candidates.forEach(function(ctx) {
+                  if (ctx && ctx.state === 'running') {
+                    ctx.suspend();
+                  }
+                });
+              } catch(e) {
+                console.log('[Portfolio Game] Audio suspend not available');
+              }
+              console.log('[Portfolio Game] Game paused');
+            }
+          };
+          
+          // Function to resume game
+          window.resumeGame = function() {
+            if (isPaused && unityInstance) {
+              isPaused = false;
+              // Try to resume using Emscripten API
+              try {
+                if (unityInstance.Module && unityInstance.Module.resumeMainLoop) {
+                  unityInstance.Module.resumeMainLoop();
+                }
+              } catch(e) {
+                console.log('[Portfolio Game] Module resume not available');
+              }
+              // Resume audio context
+              try {
+                var candidates = [
+                  unityInstance.Module && unityInstance.Module.audioContext,
+                  unityInstance.audioContext,
+                  (unityInstance.Module && unityInstance.Module.SDL && unityInstance.Module.SDL.audioContext),
+                  (unityInstance.Module && unityInstance.Module.SDL2 && unityInstance.Module.SDL2.audioContext)
+                ].filter(Boolean);
+                candidates.forEach(function(ctx) {
+                  if (ctx && ctx.state === 'suspended') {
+                    ctx.resume();
+                  }
+                });
+              } catch(e) {
+                console.log('[Portfolio Game] Audio resume not available');
+              }
+              // Refocus canvas
+              if (canvas) {
+                canvas.focus();
+              }
+              console.log('[Portfolio Game] Game resumed');
+            }
+          };
+          
+          // Listen for pause/resume messages from parent window
+          window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'pause') {
+              window.pauseGame();
+            } else if (event.data && event.data.type === 'resume') {
+              window.resumeGame();
+            }
+          });
+          
+          // Listen to visibility changes - pause when tab is hidden
+          document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+              window.pauseGame();
+            } else if (!isPaused) {
+              // Only auto-resume if not manually paused
+              window.resumeGame();
+            }
+          });
+          
+          // Initial resize after a short delay
+          setTimeout(handleResize, 150);
+          
+          // Auto-focus canvas for input
+          if (canvas) {
+            canvas.focus();
+          }
+          
+          // 通知父窗口游戏已加载完成（用于Game.tsx的加载状态）
+          if (window.parent !== window) {
+            window.parent.postMessage({ type: 'unity-loaded' }, '*');
+          }
+        })
+        .catch((message) => {
+          // Unity加载失败
+          console.error('[Portfolio Game] Unity加载失败:', message);
+          unityShowBanner('游戏加载失败: ' + message, 'error');
+        });
+      };
+      
+      script.onerror = () => {
+        console.error('[Portfolio Game] Unity loader脚本加载失败');
+        unityShowBanner('无法加载游戏文件，请检查网络连接或刷新页面重试', 'error');
+      };
+
+      // 将loader脚本添加到DOM
+      document.body.appendChild(script);
+      
+      // 防止iframe内的右键菜单（可选）
+      document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+      });
+      
+      // 自动聚焦canvas以捕获键盘输入
+      window.addEventListener('load', function() {
+        if (canvas) {
+          canvas.focus();
+        }
+      });
+    </script>
+  </body>
+</html>

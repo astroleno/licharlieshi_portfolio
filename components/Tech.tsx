@@ -287,83 +287,100 @@ const Tech: React.FC = () => {
           </div>
         </div>
 
-        {/* Left Content Column */}
-        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-20 relative bg-brand-black overflow-y-auto">
-          {/* Meta Info */}
-          <div className="flex flex-col gap-1 mb-2">
-            <span className="text-xs font-mono text-gray-400">{activeProject.year}</span>
-            <span className="text-xs font-mono text-white tracking-wider uppercase">{activeProject.client}</span>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-[15vw] md:text-[6rem] font-display font-bold leading-[0.85] mb-4 uppercase text-white tracking-tighter">
+        {/* Left Content Column - 参考Game.tsx的布局风格 */}
+        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-16 relative bg-brand-black overflow-y-auto py-24">
+          
+          {/* ========== 主要信息区 ========== */}
+          
+          {/* 大标题 - 增加底部间距，突出视觉层级 */}
+          <h2 className="text-[12vw] md:text-[5rem] lg:text-[6rem] font-display font-bold leading-[1.1] mb-8 uppercase tracking-tighter text-brand-red">
             {activeProject.name}
           </h2>
 
-          {/* Subtitle */}
-          <p className="text-sm md:text-base font-bold leading-tight mb-6 text-gray-400 tracking-wide">
-            {activeProject.subtitle}
-          </p>
-
-          {/* Role */}
-          <div className="mb-6">
-            <span className="text-[10px] text-gray-500 block mb-1 tracking-widest">ROLE :</span>
-            <div className="text-xs md:text-sm font-bold uppercase tracking-wide text-white">
-              {activeProject.role}
-            </div>
+          {/* 标签组 - 参考Game页面的标签样式 */}
+          <div className="flex flex-wrap gap-3 text-xs font-bold tracking-widest mb-8">
+            <span className="bg-brand-red text-black px-3 py-1">{activeProject.client}</span>
+            <span className="bg-white/10 text-white px-3 py-1">{activeProject.year}</span>
+            {activeProject.tags.slice(0, 2).map((tag, index) => (
+              <span key={index} className="bg-white/10 text-white px-3 py-1">{tag}</span>
+            ))}
           </div>
 
-          {/* Collaborators (if exists) */}
-          {activeProject.collaborators && activeProject.collaborators.length > 0 && (
-            <div className="mb-6">
-              <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">COLLABORATORS :</span>
-              <div className="text-xs text-gray-400 space-y-1">
-                {activeProject.collaborators.map((collaborator, index) => (
-                  <div key={index}>• {collaborator}</div>
-                ))}
+          {/* ========== 关于项目区 ========== */}
+          <div className="space-y-4 max-w-lg mb-10">
+            {/* About标题 - 参考Game的小标题风格 */}
+            <h3 className="text-sm font-bold tracking-wide text-gray-400 uppercase">
+              About This Project
+            </h3>
+            
+            {/* 副标题 */}
+            <p className="text-sm md:text-base font-bold leading-tight text-white tracking-wide">
+              {activeProject.subtitle}
+            </p>
+            
+            {/* 描述 */}
+            <p className="text-sm leading-relaxed text-gray-300">
+              {activeProject.description}
+            </p>
+          </div>
+
+          {/* ========== 角色与团队区 ========== */}
+          <div className="space-y-6 mb-10">
+            {/* Role - 更紧凑的显示 */}
+            <div>
+              <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">ROLE :</span>
+              <div className="text-xs md:text-sm font-bold uppercase tracking-wide text-white">
+                {activeProject.role}
               </div>
             </div>
-          )}
 
-          {/* Paper Submission (if exists) */}
-          {activeProject.paperSubmission && (
-            <div className="mb-6">
-              <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">PAPER SUBMISSION :</span>
-              <div className="text-xs text-brand-red font-bold">
-                {activeProject.paperSubmission}
-                {activeProject.links?.conference && (
-                  <>
-                    {' '}
+            {/* Collaborators - 简化为单行显示，用分隔符连接 */}
+            {activeProject.collaborators && activeProject.collaborators.length > 0 && (
+              <div>
+                <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">COLLABORATORS :</span>
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  {activeProject.collaborators.map((collaborator, index) => (
+                    <span key={index}>
+                      {collaborator}
+                      {index < activeProject.collaborators!.length - 1 && <span className="text-gray-600 mx-2">•</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Paper Submission - 如果存在 */}
+            {activeProject.paperSubmission && (
+              <div>
+                <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">PAPER SUBMISSION :</span>
+                <div className="text-xs text-brand-red font-bold">
+                  {activeProject.paperSubmission}
+                  {activeProject.links?.conference && (
                     <a 
                       href={activeProject.links.conference}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 hover:underline"
+                      className="ml-2 inline-flex items-center gap-1 hover:underline"
                     >
-                      [Conference Link →]
+                      [Link →]
                     </a>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Description */}
-          <p className="text-xs md:text-sm leading-relaxed max-w-md mb-8 text-gray-300">
-            {activeProject.description}
-          </p>
-
-          {/* Stack */}
-          <div className="mb-8">
-             <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">STACK :</span>
-             <div className="text-sm md:text-base font-bold uppercase tracking-wide">
-               {activeProject.tags.join(' / ')}
-             </div>
+            )}
           </div>
 
-          {/* Technical Details (collapsible if exists) */}
+          {/* ========== 技术栈区 ========== */}
+          <div className="mb-10">
+            <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">TECH STACK :</span>
+            <div className="text-sm font-bold uppercase tracking-wide text-white">
+              {activeProject.tags.join(' / ')}
+            </div>
+          </div>
+
+          {/* ========== 技术详情区（可折叠） ========== */}
           {activeProject.technicalDetails && (
-            <div className="mb-8">
+            <div className="mb-10 border-t border-white/10 pt-6">
               <button
                 onClick={() => setIsTechnicalDetailsOpen(!isTechnicalDetailsOpen)}
                 className="w-full text-left group"
@@ -385,20 +402,26 @@ const Tech: React.FC = () => {
                   opacity: isTechnicalDetailsOpen ? 1 : 0 
                 }}
               >
-                <div className="pt-2 space-y-3">
+                <div className="pt-2 space-y-4">
                   {/* Overview */}
                   <p className="text-xs text-gray-400 leading-relaxed">
                     {activeProject.technicalDetails.overview}
                   </p>
                   
-                  {/* Components */}
+                  {/* Components - 简化显示 */}
                   {activeProject.technicalDetails.components && activeProject.technicalDetails.components.length > 0 && (
                     <div>
                       <span className="text-[10px] text-gray-500 block mb-2 tracking-widest">KEY COMPONENTS :</span>
                       <ul className="text-xs text-gray-400 space-y-1">
-                        {activeProject.technicalDetails.components.map((component, index) => (
-                          <li key={index}>• {component}</li>
+                        {activeProject.technicalDetails.components.slice(0, 5).map((component, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-brand-red">•</span>
+                            <span>{component}</span>
+                          </li>
                         ))}
+                        {activeProject.technicalDetails.components.length > 5 && (
+                          <li className="text-gray-500 italic">...and {activeProject.technicalDetails.components.length - 5} more</li>
+                        )}
                       </ul>
                     </div>
                   )}
@@ -407,41 +430,45 @@ const Tech: React.FC = () => {
             </div>
           )}
 
-          {/* Links */}
+          {/* ========== 链接区 - CTA按钮风格（参考Game） ========== */}
           {activeProject.links && (
-            <div className="flex gap-6">
+            <div className="flex flex-col gap-3 pt-4">
+              {/* GitHub - 主要CTA按钮 */}
               {activeProject.links.github && (
                 <a 
                   href={activeProject.links.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors"
+                  className="group flex items-center justify-between px-6 py-4 bg-brand-red text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-red"
                 >
-                  GitHub
-                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                  <span>View on GitHub</span>
+                  <span className="transform group-hover:translate-x-2 transition-transform">→</span>
                 </a>
               )}
+              
+              {/* Live Demo - 次要按钮 */}
               {activeProject.links.live && (
                 <a 
                   href={activeProject.links.live}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors"
+                  className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black"
                 >
-                  See it live
-                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                  <span>See it Live</span>
+                  <span className="transform group-hover:translate-x-2 transition-transform">→</span>
                 </a>
               )}
-              {/* Only show conference link if there's no paper submission */}
+              
+              {/* Conference - 只在没有paper submission时显示 */}
               {activeProject.links.conference && !activeProject.paperSubmission && (
                 <a 
                   href={activeProject.links.conference}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-brand-red transition-colors"
+                  className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black"
                 >
-                  Conference
-                  <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                  <span>Conference</span>
+                  <span className="transform group-hover:translate-x-2 transition-transform">→</span>
                 </a>
               )}
             </div>

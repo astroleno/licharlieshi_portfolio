@@ -6,8 +6,8 @@ import { TransitionContext } from '../App';
  * Home 组件 - 首页展示
  * 
  * 布局说明：
- * - 上方 3/4 (75vh)：动画区域，包含背景图片、文字和前景图层
- * - 下方 1/4 (25vh)：详细文字介绍区域
+ * - 上方 4/5 (80vh)：动画区域，包含背景图片、文字和前景图层
+ * - 下方 1/5 (20vh)：详细文字介绍区域
  * - 整体固定在 100vh 内，页面完全不滚动
  * - 使用滚轮事件驱动动画，页面位置不变
  */
@@ -40,11 +40,19 @@ const Home: React.FC = () => {
       // 动画序列：同时缩放背景图、切换背景图片和前景树叶图层
       // 快速版柔化：为 back0/back2 加入模糊+位移关键帧，降低硬切
       // 需求：模糊仅在过渡的中间 1/3 区间出现
+      // 前景图 front.webp 缩放动画
       tl.to(".home-image", {
         scale: 2,                            // 前景图放大 2 倍
         z: 250,                              // Z轴位移，增强3D效果
         transformOrigin: "center center",
         ease: "none",                        // 线性，由滚轮控制缓动
+        duration: 1
+      }, 0)
+      // 前景图 front.webp 线性渐进模糊动画
+      // 效果：滚动越多越模糊，产生"景深"或"穿越"感
+      .to(".home-image", {
+        filter: "blur(8px)",                 // 从 0px 线性渐变到 8px
+        ease: "none",
         duration: 1
       }, 0)
       .to(".home-hero-section", {
@@ -133,11 +141,11 @@ const Home: React.FC = () => {
       {/* 固定布局容器：整个页面布局 */}
       <div className="w-full h-screen flex flex-col">
         
-        {/* ========== 上方 3/4：动画视觉区域 ========== */}
-        {/* 顶部 75vh 动画区域，挂载 hero-home ID 供全局红幕布定位 */}
+        {/* ========== 上方 4/5：动画视觉区域 ========== */}
+        {/* 顶部 80vh 动画区域，挂载 hero-home ID 供全局红幕布定位 */}
         <div 
           id="hero-home" 
-          className="relative w-full h-[75vh] overflow-hidden flex-shrink-0"
+          className="relative w-full h-[80vh] overflow-hidden flex-shrink-0"
         >
           {/* 第一层：背景图片 - 使用双层实现渐变过渡 */}
           <div className="content relative w-full h-full z-0">
@@ -187,6 +195,7 @@ const Home: React.FC = () => {
           </div>
 
           {/* 第三层：前景悬浮图片（树叶/透明元素） */}
+          {/* 滚动时应用三段式渐进模糊：前段清晰 → 中段模糊 → 后段清晰 */}
           <div className="absolute top-0 left-0 w-full h-full z-20 pointer-events-none overflow-hidden flex items-center justify-center">
             <img 
               src="/front.webp" 
@@ -194,12 +203,16 @@ const Home: React.FC = () => {
               loading="lazy"
               decoding="async"
               className="home-image w-full h-full object-cover"
+              style={{
+                filter: 'blur(0px)',                    // 模糊动画初始值
+                willChange: 'transform, filter'        // 性能优化：提示浏览器预备 GPU 加速
+              }}
             />
           </div>
         </div>
 
-        {/* ========== 下方 1/4：详细文字区域 ========== */}
-        <div className="w-full h-[25vh] bg-brand-black flex-shrink-0 flex items-center justify-center px-8">
+        {/* ========== 下方 1/5：详细文字区域 ========== */}
+        <div className="w-full h-[20vh] bg-brand-black flex-shrink-0 flex items-center justify-center px-8">
           <div className="max-w-4xl text-center flex flex-col items-center">
             
             {/* 小标题 */}

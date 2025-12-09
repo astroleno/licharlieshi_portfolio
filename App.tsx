@@ -4,6 +4,7 @@ import { VelocityText } from './components/VelocityText';
 import Home from './components/Home';
 import Tech from './components/Tech';
 import Music from './components/Music';
+import Game from './components/Game';
 import Contact from './components/Contact';
 import { Section } from './types';
 
@@ -41,6 +42,7 @@ const App: React.FC = () => {
       case Section.HOME: return 'hero-home';
       case Section.TECH: return 'hero-tech';
       case Section.MUSIC: return 'hero-music';
+      case Section.GAME: return 'hero-game';
       case Section.CONTACT: return 'hero-contact';
     }
   };
@@ -383,6 +385,7 @@ const App: React.FC = () => {
             {currentSection === Section.HOME && <Home />}
             {currentSection === Section.TECH && <Tech />}
             {currentSection === Section.MUSIC && <Music />}
+            {currentSection === Section.GAME && <Game />}
             {currentSection === Section.CONTACT && <Contact />}
         </TransitionContext.Provider>
       </main>

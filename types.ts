@@ -2,6 +2,7 @@ export enum Section {
   HOME = 'HOME',
   TECH = 'TECH',
   MUSIC = 'MUSIC',
+  GAME = 'GAME',
   CONTACT = 'CONTACT'
 }
 

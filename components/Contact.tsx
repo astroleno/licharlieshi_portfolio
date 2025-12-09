@@ -30,8 +30,8 @@ const Contact: React.FC = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      // 初始状态：wrapper 高度是 75vh
-      const initialHeight = viewportHeight * 0.75;
+      // 初始状态：wrapper 高度是 80vh
+      const initialHeight = viewportHeight * 0.80;
       
       // 目标字体大小（像素）
       const ratio = viewportWidth >= 768 ? 0.10 : 0.08;
@@ -49,9 +49,9 @@ const Contact: React.FC = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      // 初始状态：wrapper 宽度 = min(90vw, 110vh)，高度 = 75vh
+      // 初始状态：wrapper 宽度 = min(90vw, 110vh)，高度 = 80vh
       const maxWidth = Math.min(viewportWidth * 0.9, viewportHeight * 1.1);
-      const initialHeight = viewportHeight * 0.75;
+      const initialHeight = viewportHeight * 0.80;
       const initialWidth = Math.min(viewportWidth, maxWidth);
       
       const aspect = initialWidth / initialHeight;
@@ -115,12 +115,12 @@ const Contact: React.FC = () => {
       // 注意：不再使用 onUpdate，这样文字在滚动时不会变化
     });
 
-    // A. 容器变形：75vh 全屏 -> 16:9 -> 正方形
-    // 初始高度使用 75vh 确保文字中心始终在 37.5vh（从顶部）= 62.5vh（从底部）
+    // A. 容器变形：80vh 全屏 -> 16:9 -> 正方形
+    // 初始高度使用 80vh 确保文字中心始终在 40vh（从顶部）= 60vh（从底部）
     tl.fromTo(wrapperRef.current, 
       { 
         width: "100%", 
-        height: "75vh", // 使用明确的 75vh 而非 100%
+        height: "80vh", // 使用明确的 80vh 而非 100%
         borderRadius: "0px" 
       },
       { 
@@ -231,7 +231,7 @@ const Contact: React.FC = () => {
           <mask id="meet-mask" maskContentUnits="objectBoundingBox">
             <rect x="0" y="0" width="1" height="1" fill="black" />
             {/* 单个 text 元素 + tspan，最可靠的方式 */}
-            {/* 整体中心在 y=0.5（对应 wrapper 中心 = 页面顶部 37.5vh）*/}
+            {/* 整体中心在 y=0.5（对应 wrapper 中心 = 页面顶部 40vh）*/}
             <text 
               ref={textRef}
               x="0.5" 
@@ -257,8 +257,8 @@ const Contact: React.FC = () => {
         </defs>
       </svg>
 
-      {/* TOP SECTION (75%) - 使用绝对定位确保 wrapper 中心始终在 37.5vh */}
-      <div className="w-full h-[75vh] relative overflow-hidden z-10 px-6 md:px-0">
+      {/* TOP SECTION (80%) - 使用绝对定位确保 wrapper 中心始终在 40vh */}
+      <div className="w-full h-[80vh] relative overflow-hidden z-10 px-6 md:px-0">
         {/* Wrapper - 使用绝对定位 + transform 确保中心点位置固定 */}
         <div 
           id="hero-contact"
@@ -266,7 +266,7 @@ const Contact: React.FC = () => {
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-brand-red shadow-2xl"
           style={{
             width: '100%',
-            height: '75vh', // 初始高度填满 75vh
+            height: '80vh', // 初始高度填满 80vh
             maskImage: 'url(#meet-mask)',
             WebkitMaskImage: 'url(#meet-mask)',
             maskPosition: 'center',
@@ -291,8 +291,8 @@ const Contact: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTTOM SECTION (25%) */}
-      <div className="w-full h-[25vh] relative flex items-center justify-center bg-brand-black z-20">
+      {/* BOTTOM SECTION (20%) */}
+      <div className="w-full h-[20vh] relative flex items-center justify-center bg-brand-black z-20">
          
          <div 
            ref={hintRef}
