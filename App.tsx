@@ -378,28 +378,40 @@ const App: React.FC = () => {
       
       requestAnimationFrame(() => {
         const targetId = getHeroId(currentSection);
-        const targetEl = document.getElementById(targetId);
 
-        if (targetEl) {
-          // Music 页面特殊处理：只做淡出
-          if (currentSection === Section.MUSIC) {
-            setStage('SHRINKING');
+        /**
+         * 首次懒加载目标页面（如 Tech）时，组件可能尚未挂载，
+         * 需要轮询几次等待 DOM 就绪，避免直接走回退淡出导致动画缺失。
+         */
+        const maxAttempts = 10;
+        const attemptInterval = 50; // ms
+        let attempt = 0;
 
-            gsap.to(overlay, {
-              opacity: 0,
-              duration: 0.6,
-              ease: "power2.out",
-              onStart: () => {
-                setStage('ENTERING_TEXT');
-              },
-              onComplete: () => {
-                gsap.set(overlay, { display: 'none', opacity: 0 });
-                setStage('IDLE');
-                setNextSection(null);
-                fromRectRef.current = null;
-              }
-            });
-          } else {
+        const tryShrinkToTarget = () => {
+          const targetEl = document.getElementById(targetId);
+
+          if (targetEl) {
+            // Music 页面特殊处理：只做淡出
+            if (currentSection === Section.MUSIC) {
+              setStage('SHRINKING');
+
+              gsap.to(overlay, {
+                opacity: 0,
+                duration: 0.6,
+                ease: "power2.out",
+                onStart: () => {
+                  setStage('ENTERING_TEXT');
+                },
+                onComplete: () => {
+                  gsap.set(overlay, { display: 'none', opacity: 0 });
+                  setStage('IDLE');
+                  setNextSection(null);
+                  fromRectRef.current = null;
+                }
+              });
+              return;
+            }
+
             // 其它页面：收缩到目标 Hero 元素
             const toRect = targetEl.getBoundingClientRect();
             
@@ -427,9 +439,17 @@ const App: React.FC = () => {
                 }, 800);
               }
             });
+            return;
           }
-        } else {
-          // 回退：淡出
+
+          // 未找到目标，继续短暂重试等待懒加载后的 DOM 挂载
+          if (attempt < maxAttempts) {
+            attempt += 1;
+            setTimeout(tryShrinkToTarget, attemptInterval);
+            return;
+          }
+
+          // 最终回退：淡出
           gsap.to(overlay, {
             opacity: 0,
             duration: 0.5,
@@ -439,7 +459,9 @@ const App: React.FC = () => {
               setNextSection(null);
             }
           });
-        }
+        };
+
+        tryShrinkToTarget();
       });
     }
   }, [stage, currentSection]);

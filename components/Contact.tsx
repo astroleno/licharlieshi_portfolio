@@ -19,6 +19,8 @@ const Contact: React.FC = () => {
   
   // 标记动画是否已初始化
   const [isAnimationReady, setIsAnimationReady] = useState(false);
+  // 标记 mask / wrapper 是否已完成首帧渲染，避免未就绪时露出红底
+  const [isWrapperVisible, setIsWrapperVisible] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -34,6 +36,12 @@ const Contact: React.FC = () => {
   
   // 初始化延迟定时器
   const initTimerRef = useRef<number | null>(null);
+
+  // 组合可见性：只有在首帧安全 + 动画初始化完成后才展示
+  const shouldShowWrapper = isWrapperVisible && isAnimationReady;
+
+  // 预置 wrapper 背景色：未就绪时强制黑底，避免品牌红提前露出
+  const wrapperBgColor = shouldShowWrapper ? '#CE0000' : '#000000';
 
   /**
    * 延迟初始化动画
@@ -54,6 +62,35 @@ const Contact: React.FC = () => {
       if (initTimerRef.current) {
         window.clearTimeout(initTimerRef.current);
       }
+    };
+  }, []);
+
+  /**
+   * 首帧安全可见性控制
+   * 
+   * 背景：从 Game 首次切换到 Contact 时，主线程与 GPU 负载较高，
+   * SVG mask 可能在首帧还未完全生效，导致红色背景短暂暴露。
+   * 方案：等待 DOM 挂载后通过双层 rAF 再打开可见性，确保 mask 已经可用。
+   */
+  useEffect(() => {
+    let raf1: number | null = null;
+    let raf2: number | null = null;
+
+    const enableVisibility = () => {
+      // 只有在 mask / 文本 / 容器均已挂载后才允许显示
+      if (!wrapperRef.current || !textRef.current || !maskRectRef.current) return;
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          setIsWrapperVisible(true);
+        });
+      });
+    };
+
+    enableVisibility();
+
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
     };
   }, []);
 
@@ -291,13 +328,22 @@ const Contact: React.FC = () => {
               <tspan x="0.5" dy="-0.6em">CONTACT</tspan>
               <tspan x="0.5" dy="1.2em">NOW</tspan>
             </text>
+            {/* 
+              maskRect 用于滚轮动画展开效果
+              重要：初始 transform: scale(0) 确保在 GSAP 接管之前不显示
+              这解决了从 Game 页面切换过来时的红色方块闪烁问题
+            */}
             <rect 
               ref={maskRectRef}
               x="0" 
               y="0" 
               width="1" 
               height="1" 
-              fill="white" 
+              fill="white"
+              style={{ 
+                transform: 'scale(0)', 
+                transformOrigin: 'center center' 
+              }}
             />
           </mask>
         </defs>
@@ -305,11 +351,18 @@ const Contact: React.FC = () => {
 
       {/* TOP SECTION (80%) - 使用绝对定位确保 wrapper 中心始终在 40vh */}
       <div className="w-full h-[80vh] relative overflow-hidden z-10 px-6 md:px-0">
-        {/* Wrapper - 使用绝对定位 + transform 确保中心点位置固定 */}
+        {/* 
+          Wrapper - 使用绝对定位 + transform 确保中心点位置固定
+          
+          重要：在 isAnimationReady 为 false 时设置 opacity: 0
+          这解决了从 Game 页面第一次切换过来时的红色方块闪烁问题
+          原因：Game 页面的 iframe/Unity 占用大量资源，导致 Contact 首次渲染时
+          SVG mask 可能还没完全初始化，红色背景会暴露出来
+        */}
         <div 
           id="hero-contact"
           ref={wrapperRef}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-brand-red shadow-2xl"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden shadow-2xl"
           style={{
             width: '100%',
             height: '80vh', // 初始高度填满 80vh
@@ -321,7 +374,13 @@ const Contact: React.FC = () => {
             WebkitMaskSize: '100% 100%',
             maskRepeat: 'no-repeat',
             WebkitMaskRepeat: 'no-repeat',
-            maxWidth: 'min(90vw, 110vh)'
+            maxWidth: 'min(90vw, 110vh)',
+            // 未就绪时强制黑底，遮挡品牌红，防止首帧红块
+            backgroundColor: wrapperBgColor,
+            // 关键修复：动画就绪前隐藏 wrapper，避免红色背景闪烁
+            visibility: isWrapperVisible ? 'visible' : 'hidden',
+            opacity: shouldShowWrapper ? 1 : 0,
+            transition: 'opacity 0.2s ease-out'
           }}
         >
           <video 
