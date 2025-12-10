@@ -2,6 +2,7 @@ import React, { useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { PROJECTS } from '../constants';
 import { Project } from '../types';
 import { TransitionContext } from '../App';
+import LazyYouTube, { extractYouTubeId } from './LazyYouTube';
 
 const SCROLL_REPEAT_COUNT = 8;
 
@@ -479,20 +480,19 @@ const Tech: React.FC = () => {
         <div className="hidden md:flex w-1/2 h-full relative overflow-hidden items-center justify-center">
           <div className="w-full max-w-5xl mx-auto aspect-video flex items-center justify-center">
             {activeProject.youtubeUrl ? (
+              // 使用 LazyYouTube 组件实现懒加载
+              // 进入视口后才加载 YouTube iframe，节省带宽
               (() => {
-                // 从 YouTube embed URL 中提取视频 ID
-                // 格式: https://www.youtube.com/embed/VIDEO_ID
-                const videoIdMatch = activeProject.youtubeUrl.match(/embed\/([^?]+)/);
-                const videoId = videoIdMatch ? videoIdMatch[1] : '';
-                // 构建 YouTube iframe URL，包含自动播放、静音、循环播放和播放列表参数
-                const iframeSrc = `${activeProject.youtubeUrl}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+                const videoId = extractYouTubeId(activeProject.youtubeUrl);
+                if (!videoId) return null;
                 return (
-                  <iframe
-                    src={iframeSrc}
+                  <LazyYouTube
+                    videoId={videoId}
                     title={activeProject.name}
+                    autoplay={true}
+                    muted={true}
+                    loop={true}
                     className="w-full h-full"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    allowFullScreen
                   />
                 );
               })()

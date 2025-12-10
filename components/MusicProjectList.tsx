@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MusicCategoryData } from '../types';
+import LazyYouTube, { extractYouTubeId } from './LazyYouTube';
 
 interface MusicProjectListProps {
   category: MusicCategoryData;
@@ -21,20 +22,7 @@ export const MusicProjectList: React.FC<MusicProjectListProps> = ({ category }) 
   // 当前选中的YouTube视频URL（完整URL）
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
-  // 从URL中提取YouTube视频ID的辅助函数
-  const extractYouTubeId = (url: string): string | null => {
-    // 支持多种YouTube URL格式
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
-      /youtube\.com\/watch\?.*v=([^&\s]+)/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
+  // 注意：extractYouTubeId 函数从 LazyYouTube 组件导入
 
   // 检查链接是否为YouTube链接
   const isYouTubeLink = (url: string): boolean => {
@@ -77,15 +65,7 @@ export const MusicProjectList: React.FC<MusicProjectListProps> = ({ category }) 
     // 非YouTube链接保持原有行为（在新标签页打开）
   };
 
-  // 生成YouTube嵌入URL
-  const getYouTubeEmbedUrl = (url: string): string | null => {
-    const videoId = extractYouTubeId(url);
-    if (!videoId) return null;
-    // 添加autoplay=1和loop=1参数，并设置playlist为视频ID以支持循环
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
-  };
-
-  const embedUrl = selectedVideoUrl ? getYouTubeEmbedUrl(selectedVideoUrl) : null;
+  // 注意：YouTube URL 解析和嵌入现在由 LazyYouTube 组件处理
 
   return (
     <div className="w-full h-full flex flex-col md:flex-row bg-brand-black">
@@ -195,19 +175,31 @@ export const MusicProjectList: React.FC<MusicProjectListProps> = ({ category }) 
       </div>
 
       {/* 右侧：YouTube视频播放器容器 */}
+      {/* 使用 LazyYouTube 组件实现懒加载，节省首屏资源 */}
       <div className="hidden md:flex w-1/2 h-full relative overflow-hidden items-center justify-center bg-brand-black">
         <div className="w-full max-w-5xl mx-auto aspect-video flex items-center justify-center px-8">
-          {embedUrl ? (
-            <iframe
-              key={selectedVideoUrl} // 使用key确保URL变化时重新加载iframe
-              src={embedUrl}
-              title="YouTube Video Player"
-              className="w-full h-full"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
+          {selectedVideoUrl ? (
+            (() => {
+              const videoId = extractYouTubeId(selectedVideoUrl);
+              if (!videoId) return (
+                <div className="flex items-center justify-center w-full h-full border border-white/10">
+                  <p className="text-white/30 font-mono text-sm">Invalid video URL</p>
+                </div>
+              );
+              return (
+                <LazyYouTube
+                  key={selectedVideoUrl} // 使用 key 确保 URL 变化时重新加载
+                  videoId={videoId}
+                  title="YouTube Video Player"
+                  autoplay={true}
+                  muted={true}
+                  loop={true}
+                  className="w-full h-full"
+                />
+              );
+            })()
           ) : (
-            // 没有YouTube链接时显示占位符
+            // 没有 YouTube 链接时显示占位符
             <div className="flex items-center justify-center w-full h-full border border-white/10">
               <p className="text-white/30 font-mono text-sm">No video available</p>
             </div>
