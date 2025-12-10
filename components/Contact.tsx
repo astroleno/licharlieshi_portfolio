@@ -224,14 +224,13 @@ const Contact: React.FC = () => {
       duration: 0.5
     });
 
-    // C. Mask 展开
+    // C. Mask 展开：使用 attr 动画避免 SVG transform 坐标系问题
     tl.fromTo(maskRectRef.current,
       { 
-        scale: 0, 
-        transformOrigin: "center center" 
+        attr: { x: 0.5, y: 0.5, width: 0, height: 0 } // 从中心收拢
       },
       { 
-        scale: 1, 
+        attr: { x: 0, y: 0, width: 1, height: 1 },     // 展开覆盖整个 0-1 区域
         ease: "power2.inOut", 
         duration: 0.8 
       },
@@ -335,15 +334,12 @@ const Contact: React.FC = () => {
             */}
             <rect 
               ref={maskRectRef}
-              x="0" 
-              y="0" 
-              width="1" 
-              height="1" 
+              x="0.5" 
+              y="0.5" 
+              width="0" 
+              height="0" 
               fill="white"
-              style={{ 
-                transform: 'scale(0)', 
-                transformOrigin: 'center center' 
-              }}
+              // 初始为点状，等待 GSAP attr 动画展开，避免 transform 坐标系偏移
             />
           </mask>
         </defs>
