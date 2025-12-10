@@ -1,9 +1,24 @@
-import React, { useLayoutEffect, useRef, useContext } from 'react';
+import React, { useLayoutEffect, useRef, useContext, useEffect, useState } from 'react';
 import { TransitionContext } from '../App';
 import { VelocityText } from './VelocityText';
 
+/**
+ * Contact 组件
+ * 
+ * 功能说明：
+ * - 展示联系方式页面
+ * - 使用 SVG mask 实现文字镂空效果
+ * - 滚轮驱动动画：容器变形 + mask 展开
+ * 
+ * 动画初始化策略：
+ * - 延迟初始化，等待转场动画完成后再计算尺寸
+ * - 避免在快门转场期间读取不稳定的 DOM 尺寸
+ */
 const Contact: React.FC = () => {
   const { isTextVisible } = useContext(TransitionContext);
+  
+  // 标记动画是否已初始化
+  const [isAnimationReady, setIsAnimationReady] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -16,14 +31,45 @@ const Contact: React.FC = () => {
   // 动画状态
   const progressRef = useRef(0);
   const timelineRef = useRef<any>(null);
+  
+  // 初始化延迟定时器
+  const initTimerRef = useRef<number | null>(null);
+
+  /**
+   * 延迟初始化动画
+   * 
+   * 原因：
+   * - 从 Game 页面切换过来时，会触发快门转场动画
+   * - 快门转场期间 Contact 组件已挂载，但 DOM 尺寸可能不稳定
+   * - 延迟 100-200ms 等待转场完成后再初始化，确保尺寸计算准确
+   */
+  useEffect(() => {
+    // 延迟设置动画就绪状态
+    initTimerRef.current = window.setTimeout(() => {
+      setIsAnimationReady(true);
+      console.log('[Contact] 动画初始化延迟完成，开始设置动画');
+    }, 150); // 150ms 延迟，等待快门转场基本完成
+    
+    return () => {
+      if (initTimerRef.current) {
+        window.clearTimeout(initTimerRef.current);
+      }
+    };
+  }, []);
 
   useLayoutEffect(() => {
+    // 等待动画就绪标记
+    if (!isAnimationReady) return;
+    
     if (typeof window === 'undefined') return;
 
     const textEl = textRef.current;
     const wrapperEl = wrapperRef.current;
 
     if (!textEl || !wrapperEl) return;
+    
+    console.log('[Contact] 开始初始化动画，当前 wrapper 尺寸:', 
+      wrapperEl.offsetWidth, 'x', wrapperEl.offsetHeight);
 
     // 计算固定的字体大小（基于视口，不随滚动变化）
     const computeFixedFontSize = () => {
@@ -217,7 +263,7 @@ const Contact: React.FC = () => {
       if (container) container.removeEventListener('wheel', handleWheel);
       tl.kill();
     };
-  }, []);
+  }, [isAnimationReady]); // 依赖 isAnimationReady，延迟后才初始化
 
   return (
     <div 

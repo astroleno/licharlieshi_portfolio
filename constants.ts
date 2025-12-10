@@ -15,7 +15,7 @@ export const PROJECTS: Project[] = [
     description: 'PanGu is a hybrid performance operating system that uses both standard camera vision and depth cameras to turn physical movement into a three-dimensional performance space. Instead of thinking only in left/right stereo, performers compose and control sound in full 3D, mapping gestures and positions in the room to multichannel speakers and spectral processes. Designed for both live performance and experimental composition, PanGu functions as a spatial instrument and control layer, enabling artists to "play" space itself as a core musical parameter.',
     tags: ['SPATIAL AUDIO', 'COMPUTER VISION', 'PERFORMANCE SYSTEM'],
     imageUrl: 'https://picsum.photos/seed/pangu/1200/800',
-    videoUrl: '/a.webm',
+    videoUrl: '/pangu.webm',
     youtubeUrl: 'https://www.youtube.com/embed/SbW4J_I4MYo',
     links: {
       github: 'https://github.com/CharlieSL1/PanGu-Spatial-Audio-Performance-Control-System',
@@ -35,7 +35,7 @@ export const PROJECTS: Project[] = [
     description: 'WelcomeBack is an AI-powered voice system that brings back the voice of a beloved grandfather through technology. Using GPT-4 to generate warm, contextual Chinese messages based on time-of-day, the system automatically triggers at random intervals (2-6 hours) and transforms text into the grandfather\'s voice using Seed-VC voice conversion technology. Designed for embedded deployment on Raspberry Pi, WelcomeBack creates spontaneous moments of connection throughout the day, preserving memories and bringing comfort through the familiar voice of a loved one.',
     tags: ['GPT-4', 'SEED-VC', 'EMBEDDED SYSTEM', 'RASPBERRY PI'],
     imageUrl: 'https://picsum.photos/seed/welcomeback/1200/800',
-    videoUrl: '/b.webm',
+    videoUrl: '/welcomeback.webm',
     links: {
       github: 'https://github.com/CharlieSL1/Welcome_Back'
     }
@@ -91,9 +91,11 @@ export const PROJECTS: Project[] = [
     },
     tags: ['HARDWARE DESIGN', 'ULTRASONIC MODULATION', 'C++', '3D PRINTING'],
     imageUrl: 'https://picsum.photos/seed/dreampillow/1200/800',
-    videoUrl: '/d.webm',
+    videoUrl: '/dreampillow.webm',
+    youtubeUrl: 'https://www.youtube.com/embed/8rhZtqXsF-4',
     links: {
-      github: 'https://github.com/CharlieSL1/DreamPillow'
+      github: 'https://github.com/CharlieSL1/DreamPillow',
+      live: 'https://www.youtube.com/watch?v=8rhZtqXsF-4'
     }
   },
   {

@@ -24,6 +24,8 @@ import { VelocityText } from './components/VelocityText';
 import Home from './components/Home';  // 首屏组件同步加载
 import { Section } from './types';
 import { usePreloadResources, CRITICAL_RESOURCES } from './hooks/usePreloadResources';
+import { useIdlePreload } from './hooks/useIdlePreload';
+import { useResourcePreload } from './hooks/useResourcePreload';
 
 // ============================================
 // 懒加载组件配置
@@ -42,25 +44,6 @@ const Game = React.lazy(() => import('./components/Game'));
 
 /** Contact 页面 - 联系方式 */
 const Contact = React.lazy(() => import('./components/Contact'));
-
-// ============================================
-// 懒加载 Fallback 组件
-// ============================================
-/**
- * 页面加载中的占位组件
- * 显示简洁的加载动画，与整体设计风格一致
- */
-const PageLoadingFallback: React.FC = () => (
-  <div className="w-full h-full flex items-center justify-center bg-brand-black">
-    <div className="flex flex-col items-center gap-4">
-      {/* 加载动画 - 使用与主 Loading 一致的样式 */}
-      <div className="loader-box loader-box--small" />
-      <span className="text-white/50 text-sm tracking-widest uppercase">
-        Loading...
-      </span>
-    </div>
-  </div>
-);
 
 // ============================================
 // 类型定义
@@ -96,6 +79,22 @@ const App: React.FC = () => {
   const displayLoader = !resourcesLoaded;
   // Loading 完成标记：用于控制文字动画
   const hasLoaderFinished = resourcesLoaded;
+  
+  // ========== 空闲预加载 ==========
+  // 首屏加载完成后，在浏览器空闲时预加载其他页面的 JS chunk
+  // 这样用户切换页面时可以秒开，无需等待加载
+  useIdlePreload({
+    enabled: hasLoaderFinished,  // 首屏加载完成后启用
+    delay: 2000                   // 延迟 2 秒，确保首屏交互流畅
+  });
+  
+  // ========== 静态资源预加载 ==========
+  // 在 JS chunk 预加载完成后，继续预加载 public 文件夹中的静态资源
+  // 图片：完整预加载 | 视频：只预加载 metadata
+  useResourcePreload({
+    enabled: hasLoaderFinished,  // 首屏加载完成后启用
+    delay: 4000                   // 延迟 4 秒，在 JS chunk 预加载之后
+  });
   
   // ========== 转场状态 ==========
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -464,8 +463,10 @@ const App: React.FC = () => {
           {/* 首屏组件 - 同步加载 */}
           {currentSection === Section.HOME && <Home />}
           
-          {/* 非首屏组件 - 懒加载，使用 Suspense 包裹 */}
-          <Suspense fallback={<PageLoadingFallback />}>
+          {/* 非首屏组件 - 懒加载 */}
+          {/* fallback 设为 null，避免切屏时闪现 Loading */}
+          {/* 转场动画本身已经提供了视觉过渡，不需要额外的加载提示 */}
+          <Suspense fallback={null}>
             {currentSection === Section.TECH && <Tech />}
             {currentSection === Section.MUSIC && <Music />}
             {currentSection === Section.GAME && <Game />}

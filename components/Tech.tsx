@@ -479,13 +479,23 @@ const Tech: React.FC = () => {
         <div className="hidden md:flex w-1/2 h-full relative overflow-hidden items-center justify-center">
           <div className="w-full max-w-5xl mx-auto aspect-video flex items-center justify-center">
             {activeProject.youtubeUrl ? (
-              <iframe
-                src={`${activeProject.youtubeUrl}?autoplay=1&mute=1&loop=1&playlist=SbW4J_I4MYo`}
-                title={activeProject.name}
-                className="w-full h-full"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
+              (() => {
+                // 从 YouTube embed URL 中提取视频 ID
+                // 格式: https://www.youtube.com/embed/VIDEO_ID
+                const videoIdMatch = activeProject.youtubeUrl.match(/embed\/([^?]+)/);
+                const videoId = videoIdMatch ? videoIdMatch[1] : '';
+                // 构建 YouTube iframe URL，包含自动播放、静音、循环播放和播放列表参数
+                const iframeSrc = `${activeProject.youtubeUrl}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+                return (
+                  <iframe
+                    src={iframeSrc}
+                    title={activeProject.name}
+                    className="w-full h-full"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              })()
             ) : activeProject.videoUrl ? (
               <video 
                 src={activeProject.videoUrl} 
