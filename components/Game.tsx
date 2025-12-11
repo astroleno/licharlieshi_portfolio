@@ -16,7 +16,7 @@ import { TransitionContext } from '../App';
  * - Use postMessage to communicate pause/resume with Unity
  * - Gray overlay with blur effect when paused
  */
-const GAME_URL = '/game/index.html?v=20250223';
+const GAME_URL = '/game/index.html?v=20250224';
 
 const Game: React.FC = () => {
   // Get text visibility state from App.tsx's TransitionContext

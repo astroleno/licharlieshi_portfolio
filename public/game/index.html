@@ -32,28 +32,28 @@
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var warningBanner = document.querySelector("#unity-warning");
 
-      // 让画布自适应窗口：保持 4:3 比例并“覆盖”视口（可能会左右或上下轻微裁切），消除黑边
+      // 让画布自适应窗口：保持 4:3 比例，并用背景色填充剩余区域
       function resizeResponsive() {
         try {
-          var targetRatio = 1792 / 1344; // 设计分辨率比例（4:3）
+          var targetRatio = 1792 / 1344; // Unity 构建的原始比例（4:3）
           var viewportW = window.innerWidth;
           var viewportH = window.innerHeight;
           var viewportRatio = viewportW / viewportH;
-          var finalW = viewportW;
-          var finalH = viewportH;
+          var finalW;
+          var finalH;
 
-          // “cover” 策略：选更大的尺寸以填满视口，允许少量裁切以避免黑边
+          // contain 策略：保证完整的 4:3 内容可见，多余空间由背景填充
           if (viewportRatio > targetRatio) {
-            // 视口偏宽，为填满视口需要增加高度
-            finalH = viewportW / targetRatio;
-            finalW = viewportW;
-          } else {
-            // 视口偏高，为填满视口需要增加宽度
-            finalW = viewportH * targetRatio;
+            // 屏幕偏宽，限制宽度，增加左右黑边
             finalH = viewportH;
+            finalW = viewportH * targetRatio;
+          } else {
+            // 屏幕偏高，限制高度，增加上下黑边
+            finalW = viewportW;
+            finalH = viewportW / targetRatio;
           }
 
-          // 让容器占满视口，并用 flex 居中画布
+          // 使用 flex 居中，避免拉伸
           container.style.position = "fixed";
           container.style.inset = "0";
           container.style.display = "flex";
@@ -62,12 +62,13 @@
           container.style.width = "100%";
           container.style.height = "100%";
           container.style.overflow = "hidden";
+          container.style.backgroundColor = '#000000';
 
-          // 画布按比例缩放，最大化贴合视口但不溢出
           canvas.style.width = finalW + "px";
           canvas.style.height = finalH + "px";
           canvas.style.maxWidth = "100%";
           canvas.style.maxHeight = "100%";
+          canvas.style.backgroundColor = '#000000';
         } catch (err) {
           console.error("Failed to resize canvas responsively:", err);
         }
