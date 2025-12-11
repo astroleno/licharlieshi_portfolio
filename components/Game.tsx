@@ -16,6 +16,8 @@ import { TransitionContext } from '../App';
  * - Use postMessage to communicate pause/resume with Unity
  * - Gray overlay with blur effect when paused
  */
+const GAME_URL = '/game/index.html?v=20250223';
+
 const Game: React.FC = () => {
   // Get text visibility state from App.tsx's TransitionContext
   const { isTextVisible } = useContext(TransitionContext);
@@ -45,9 +47,30 @@ const Game: React.FC = () => {
    * Send message to iframe to pause/resume Unity game
    */
   const sendGameCommand = (command: 'pause' | 'resume') => {
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ type: command }, '*');
+    const iframeWindow = iframeRef.current?.contentWindow as (Window & { pauseGame?: () => void; resumeGame?: () => void }) | null;
+    if (!iframeWindow) return;
+
+    console.log('[Game] sendGameCommand:', command);
+    try {
+      if (command === 'pause' && typeof iframeWindow.pauseGame === 'function') {
+        iframeWindow.pauseGame();
+      } else if (command === 'resume' && typeof iframeWindow.resumeGame === 'function') {
+        iframeWindow.resumeGame();
+      }
+    } catch (err) {
+      console.warn('Direct game control failed, fallback to events/postMessage:', err);
     }
+
+    // 模拟窗口焦点变化，触发 iframe 内部的 blur/focus 监听
+    const syntheticEvent = command === 'pause' ? new Event('blur') : new Event('focus');
+    try {
+      iframeWindow.dispatchEvent(syntheticEvent);
+    } catch (err) {
+      console.warn('Dispatch synthetic event failed:', err);
+    }
+
+    // 兜底：仍然通过 postMessage 通知 iframe（旧逻辑依赖此行为）
+    iframeWindow.postMessage({ type: command }, '*');
   };
 
   /**
@@ -97,7 +120,8 @@ const Game: React.FC = () => {
       setTimeout(() => {
         const isNowFullscreen = !!document.fullscreenElement;
         setIsFullscreen(isNowFullscreen);
-        
+        console.log('[Game] fullscreenchange →', isNowFullscreen ? 'ENTER' : 'EXIT');
+
         // Pause game when exiting fullscreen, resume when entering
         if (gameLoaded) {
           if (isNowFullscreen) {
@@ -147,6 +171,7 @@ const Game: React.FC = () => {
     if (showPausedOverlay && document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
+    console.log('[Game] overlay state changed →', showPausedOverlay ? 'PAUSED' : 'ACTIVE');
     if (showPausedOverlay) {
       sendGameCommand('pause');
     } else if (gameStarted) {
@@ -247,8 +272,9 @@ const Game: React.FC = () => {
         {/* When paused: grayscale + dim filter to show gray game screen */}
         {gameStarted && (
           <iframe 
+            id="portfolio-game-iframe"
             ref={iframeRef}
-            src="/game/index.html"
+            src={GAME_URL}
             title="Portfolio Game - Unity WebGL"
             className="w-full h-full border-0 absolute inset-0"
             style={{
