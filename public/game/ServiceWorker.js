@@ -1,4 +1,4 @@
-const cacheName = "DefaultCompany-Hisstory-1.0";
+const cacheName = "DefaultCompany-Hisstory-1.0-20250305";
 const contentToCache = [
     "Build/webgl_test.loader.js",
     "Build/webgl_test.framework.js.br",
@@ -20,6 +20,23 @@ self.addEventListener('install', function (e) {
 
 self.addEventListener('fetch', function (e) {
     e.respondWith((async function () {
+      // Never cache non-GET requests
+      if (e.request.method !== "GET") {
+        return fetch(e.request);
+      }
+
+      // Avoid caching range requests (common for audio/video streaming).
+      // Cache API does not handle partial content well and can cause pending requests.
+      if (e.request.headers && e.request.headers.has("range")) {
+        return fetch(e.request);
+      }
+
+      // Avoid caching StreamingAssets (often updated during dev and may stream large files)
+      const url = new URL(e.request.url);
+      if (url.pathname.includes("/StreamingAssets/")) {
+        return fetch(e.request);
+      }
+
       let response = await caches.match(e.request);
       console.log(`[Service Worker] Fetching resource: ${e.request.url}`);
       if (response) { return response; }
@@ -27,7 +44,8 @@ self.addEventListener('fetch', function (e) {
       response = await fetch(e.request);
       const cache = await caches.open(cacheName);
       console.log(`[Service Worker] Caching new resource: ${e.request.url}`);
-      cache.put(e.request, response.clone());
+      // Best effort cache: ignore failures for streamed/unsupported responses
+      try { await cache.put(e.request, response.clone()); } catch (_) {}
       return response;
     })());
 });

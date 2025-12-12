@@ -21,8 +21,22 @@
     </div>
     <script>
       window.addEventListener("load", function () {
+        // 仅在非 localhost 环境默认注册 Service Worker，避免开发阶段缓存脏数据
+        const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+        const enableSW = new URLSearchParams(location.search).get("sw") === "1";
         if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.register("ServiceWorker.js");
+          if (!isLocalhost || enableSW) {
+            navigator.serviceWorker.register("ServiceWorker.js");
+          } else if (navigator.serviceWorker.getRegistrations) {
+            // 本地开发时主动卸载历史 SW，防止它劫持请求导致 404/旧缓存
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              registrations.forEach((registration) => {
+                if (registration.scope && registration.scope.includes("/game")) {
+                  registration.unregister();
+                }
+              });
+            }).catch(() => {});
+          }
         }
       });
 
