@@ -1,4 +1,4 @@
-const cacheName = "DefaultCompany-Hisstory-1.0-20250305";
+const cacheName = "DefaultCompany-Hisstory-1.0-20250306";
 const contentToCache = [
     "Build/webgl_test.loader.js",
     "Build/webgl_test.framework.js.br",
