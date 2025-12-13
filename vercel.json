@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
     {
-      "source": "/game/Build/(.*)\\.js\\.br",
+      "source": "/story/Build/(.*)\\.js\\.br",
       "headers": [
         {
           "key": "Content-Encoding",
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "source": "/game/Build/(.*)\\.data\\.br",
+      "source": "/story/Build/(.*)\\.data\\.br",
       "headers": [
         {
           "key": "Content-Encoding",
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "source": "/game/Build/(.*)\\.wasm\\.br",
+      "source": "/story/Build/(.*)\\.wasm\\.br",
       "headers": [
         {
           "key": "Content-Encoding",
@@ -41,7 +41,7 @@
       ]
     },
     {
-      "source": "/game/Build/(.*)\\.gz",
+      "source": "/story/Build/(.*)\\.gz",
       "headers": [
         {
           "key": "Content-Encoding",

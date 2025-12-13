@@ -67,11 +67,11 @@ We moved away from a "One Page Scroll" design to a **Application-Shell** archite
 - **Why?** To allow each section (Home, Work, About) to have its own complex scroll logic (like the Home zoom effect or Work infinite list) without conflicting with a global page scroll.
 - **Implementation**: `App.tsx` acts as the layout shell, rendering specific components based on the `currentSection` state.
 
-### Game (Unity WebGL) Integration Notes
-- 最新游戏构建位于 `public/game`，来源于 `reference/webgl_test`（包含 `Build/`、`TemplateData/`、`index.html`、`manifest.webmanifest`、`ServiceWorker.js`）。
-- 更新流程：先备份现有 `public/game`，再将上述文件从 `reference/webgl_test` 覆盖过去，确保 `.br` 资源和目录结构保持不变。
-- 本地校验：`pnpm dev` 后访问 `http://localhost:5173/game/index.html` 或应用内 Game 入口，确认加载条/全屏/暂停恢复正常。
-- Vercel 部署：`vercel.json` 已对 `/game/Build/*.br` 配置 `Content-Encoding: br`，文件名若改需同步配置；部署后如遇缓存问题，清 CDN 或提升版本号。
+### Story (Unity WebGL) Integration Notes
+- 最新故事构建位于 `public/story`，来源于 `reference/webgl_test`（包含 `Build/`、`TemplateData/`、`index.html`、`manifest.webmanifest`、`ServiceWorker.js`）。
+- 更新流程：先备份现有 `public/story`，再将上述文件从 `reference/webgl_test` 覆盖过去，确保 `.br` 资源和目录结构保持不变。
+- 本地校验：`pnpm dev` 后访问 `http://localhost:5173/story/index.html` 或应用内 Story 入口，确认加载条/全屏/暂停恢复正常。
+- Vercel 部署：`vercel.json` 已对 `/story/Build/*.br` 配置 `Content-Encoding: br`，文件名若改需同步配置；部署后如遇缓存问题，清 CDN 或提升版本号。
 
 ### VelocityText Component
 To achieve the "rushing in" effect with ghost trails:

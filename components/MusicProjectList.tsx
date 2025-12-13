@@ -71,8 +71,8 @@ export const MusicProjectList: React.FC<MusicProjectListProps> = ({ category }) 
     <div className="w-full h-full flex flex-col md:flex-row bg-brand-black">
       
       {/* 左侧：作品详情列表 */}
-      <div className="w-full md:w-1/2 h-full overflow-y-auto scrollbar-hide px-4 md:px-12 py-8 md:py-16 box-border">
-        <div className="max-w-3xl mx-auto flex flex-col gap-12 md:gap-16">
+      <div className="w-full md:w-1/2 h-full overflow-y-auto scrollbar-hide px-4 md:px-12 py-8 md:py-[4.5rem] box-border">
+        <div className="max-w-3xl mx-auto flex flex-col gap-12 md:gap-[4.5rem]">
           
           {/* Category Header (Mobile Only / Optional Context) */}
           <div className="md:hidden text-brand-red font-mono text-xs tracking-widest mb-4">

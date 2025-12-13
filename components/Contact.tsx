@@ -47,7 +47,7 @@ const Contact: React.FC = () => {
    * 延迟初始化动画
    * 
    * 原因：
-   * - 从 Game 页面切换过来时，会触发快门转场动画
+   * - 从 Story 页面切换过来时，会触发快门转场动画
    * - 快门转场期间 Contact 组件已挂载，但 DOM 尺寸可能不稳定
    * - 延迟 100-200ms 等待转场完成后再初始化，确保尺寸计算准确
    */
@@ -68,7 +68,7 @@ const Contact: React.FC = () => {
   /**
    * 首帧安全可见性控制
    * 
-   * 背景：从 Game 首次切换到 Contact 时，主线程与 GPU 负载较高，
+   * 背景：从 Story 首次切换到 Contact 时，主线程与 GPU 负载较高，
    * SVG mask 可能在首帧还未完全生效，导致红色背景短暂暴露。
    * 方案：等待 DOM 挂载后通过双层 rAF 再打开可见性，确保 mask 已经可用。
    */
@@ -330,7 +330,7 @@ const Contact: React.FC = () => {
             {/* 
               maskRect 用于滚轮动画展开效果
               重要：初始 transform: scale(0) 确保在 GSAP 接管之前不显示
-              这解决了从 Game 页面切换过来时的红色方块闪烁问题
+              这解决了从 Story 页面切换过来时的红色方块闪烁问题
             */}
             <rect 
               ref={maskRectRef}
@@ -347,12 +347,12 @@ const Contact: React.FC = () => {
 
       {/* TOP SECTION (80%) - 使用绝对定位确保 wrapper 中心始终在 40vh */}
       <div className="w-full h-[80vh] relative overflow-hidden z-10 px-6 md:px-0">
-        {/* 
+          {/* 
           Wrapper - 使用绝对定位 + transform 确保中心点位置固定
           
           重要：在 isAnimationReady 为 false 时设置 opacity: 0
-          这解决了从 Game 页面第一次切换过来时的红色方块闪烁问题
-          原因：Game 页面的 iframe/Unity 占用大量资源，导致 Contact 首次渲染时
+          这解决了从 Story 页面第一次切换过来时的红色方块闪烁问题
+          原因：Story 页面的 iframe/Unity 占用大量资源，导致 Contact 首次渲染时
           SVG mask 可能还没完全初始化，红色背景会暴露出来
         */}
         <div 
@@ -404,7 +404,7 @@ const Contact: React.FC = () => {
 
          <div 
            ref={socialRef}
-           className="absolute flex items-center gap-8 md:gap-16 opacity-0"
+           className="absolute flex items-center gap-8 md:gap-[4.5rem] opacity-0"
          >
            <a href="mailto:hello@example.com" className="group relative">
               <span className="text-white text-sm md:text-xl font-bold tracking-[0.2em] uppercase font-sans hover:text-brand-red transition-colors duration-300">

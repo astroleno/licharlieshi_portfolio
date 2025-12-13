@@ -94,7 +94,7 @@ const preloadModule = async (
 const PRELOAD_MODULES = [
   { name: 'Tech', importFn: () => import('../components/Tech') },
   { name: 'Music', importFn: () => import('../components/Music') },
-  { name: 'Game', importFn: () => import('../components/Game') },
+  { name: 'Story', importFn: () => import('../components/Story') },
   { name: 'Contact', importFn: () => import('../components/Contact') }
 ];
 

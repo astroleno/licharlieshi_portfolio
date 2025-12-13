@@ -218,7 +218,7 @@ const Home: React.FC = () => {
             {/* 小标题 */}
             <div className="mb-3 overflow-hidden">
                 <VelocityText 
-                    content="Where music, machine learning, and hardware meet on the same stage." 
+                    content="Teach the machine to listen so the night can have a voice." 
                     visible={isTextVisible}
                     delay={0.6}
                     className="text-brand-red/80 font-display text-sm md:text-base uppercase tracking-[0.3em]"
@@ -226,16 +226,17 @@ const Home: React.FC = () => {
             </div>
 
             {/* 正文 - 拆分成两行以获得更好的动画效果，或者作为一个整体块淡入 */}
-            <div className="text-white/60 text-base md:text-lg leading-relaxed font-light overflow-hidden flex flex-col items-center gap-1">
+            {/* 增加行高和padding，移除overflow-hidden以避免文字被遮挡 */}
+            <div className="text-white/60 text-base md:text-lg leading-loose font-light overflow-visible flex flex-col items-center gap-2 py-2">
                 <VelocityText 
-                    content="From depth-camera performance OS and ultrasonic speakers to AI memory voices and jazz datasets, " 
+                    content=" I turn listening into space, so sound can be entered, not just heard." 
                     visible={isTextVisible}
                     delay={0.7}
                     mode="sync" // 正文句子不需要每个字母都错位，整句滑入更好读
                     className="text-white/60"
                 />
                  <VelocityText 
-                    content="this portfolio collects systems that treat technology as an instrument and emotion as a core parameter." 
+                    content="I build warm technology that keeps memory alive in the world." 
                     visible={isTextVisible}
                     delay={0.8}
                     mode="sync"

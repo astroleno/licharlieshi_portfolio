@@ -76,14 +76,14 @@
 }
 
 /* Fullscreen override for the in-page Unity container */
-#hero-game:fullscreen,
-#hero-game:-webkit-full-screen {
+#hero-story:fullscreen,
+#hero-story:-webkit-full-screen {
   width: 100% !important;
   height: 100% !important;
 }
 
-#hero-game:fullscreen iframe,
-#hero-game:-webkit-full-screen iframe {
+#hero-story:fullscreen iframe,
+#hero-story:-webkit-full-screen iframe {
   width: 100% !important;
   height: 100% !important;
 }

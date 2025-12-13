@@ -11,7 +11,7 @@
  * 
  * 懒加载策略：
  * - Home: 首屏组件，同步加载
- * - Tech/Music/Game/Contact: 懒加载，用户导航时才加载
+ * - Tech/Music/Story/Contact: 懒加载，用户导航时才加载
  * 
  * 转场动画：
  * - 普通页面：红色矩形扩展/收缩动画
@@ -39,8 +39,8 @@ const Tech = React.lazy(() => import('./components/Tech'));
 /** Music 页面 - 音乐作品展示 */
 const Music = React.lazy(() => import('./components/Music'));
 
-/** Game 页面 - 游戏作品展示（含 Unity WebGL） */
-const Game = React.lazy(() => import('./components/Game'));
+/** Story 页面 - 故事作品展示（含 Unity WebGL） */
+const Story = React.lazy(() => import('./components/Story'));
 
 /** Contact 页面 - 联系方式 */
 const Contact = React.lazy(() => import('./components/Contact'));
@@ -125,7 +125,7 @@ const App: React.FC = () => {
       case Section.HOME: return 'hero-home';
       case Section.TECH: return 'hero-tech';
       case Section.MUSIC: return 'hero-music';
-      case Section.GAME: return 'hero-game';
+      case Section.STORY: return 'hero-story';
       case Section.CONTACT: return 'hero-contact';
     }
   };
@@ -491,7 +491,7 @@ const App: React.FC = () => {
           <Suspense fallback={null}>
             {currentSection === Section.TECH && <Tech />}
             {currentSection === Section.MUSIC && <Music />}
-            {currentSection === Section.GAME && <Game />}
+            {currentSection === Section.STORY && <Story />}
             {currentSection === Section.CONTACT && <Contact />}
           </Suspense>
         </TransitionContext.Provider>

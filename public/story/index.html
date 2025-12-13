@@ -31,7 +31,7 @@
             // 本地开发时主动卸载历史 SW，防止它劫持请求导致 404/旧缓存
             navigator.serviceWorker.getRegistrations().then((registrations) => {
               registrations.forEach((registration) => {
-                if (registration.scope && registration.scope.includes("/game")) {
+                if (registration.scope && registration.scope.includes("/story")) {
                   registration.unregister();
                 }
               });
@@ -135,7 +135,7 @@
       // config.matchWebGLToCanvasSize = false;
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
+        // Mobile device style: fill the whole browser client area with the story canvas:
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
@@ -145,9 +145,9 @@
       // Unity 实例引用，用于跨窗口暂停/恢复
       var unityInstanceRef = null;
 
-      function pauseGame() {
+      function pauseStory() {
         try {
-          console.log('[Unity WebGL] pauseGame triggered');
+          console.log('[Unity WebGL] pauseStory triggered');
           if (!unityInstanceRef || !unityInstanceRef.Module) return;
           console.log('[Unity WebGL] Unity instance ready:', !!unityInstanceRef);
           if (unityInstanceRef.Module.pauseMainLoop) {
@@ -159,13 +159,13 @@
             unityInstanceRef.Module.audioContext.suspend();
           }
         } catch (err) {
-          console.error("Pause game failed:", err);
+          console.error("Pause story failed:", err);
         }
       }
 
-      function resumeGame() {
+      function resumeStory() {
         try {
-          console.log('[Unity WebGL] resumeGame triggered');
+          console.log('[Unity WebGL] resumeStory triggered');
           if (!unityInstanceRef || !unityInstanceRef.Module) return;
           if (unityInstanceRef.Module.resumeMainLoop) {
             console.log('[Unity WebGL] resumeMainLoop available, invoking');
@@ -176,13 +176,13 @@
             unityInstanceRef.Module.audioContext.resume();
           }
         } catch (err) {
-          console.error("Resume game failed:", err);
+          console.error("Resume story failed:", err);
         }
       }
 
       // 暴露到 window，便于父页面直接调用
-      window.pauseGame = pauseGame;
-      window.resumeGame = resumeGame;
+      window.pauseStory = pauseStory;
+      window.resumeStory = resumeStory;
 
       // 接收父页面 postMessage 的暂停/恢复指令
       window.addEventListener("message", function (event) {
@@ -190,9 +190,9 @@
           console.log('[Unity WebGL] postMessage received:', event.data);
           if (!event.data || typeof event.data.type !== "string") return;
           if (event.data.type === "pause") {
-            pauseGame();
+            pauseStory();
           } else if (event.data.type === "resume") {
-            resumeGame();
+            resumeStory();
           }
         } catch (err) {
           console.error("Handle postMessage failed:", err);
@@ -202,18 +202,18 @@
       // 全屏/可见性/焦点保护：在 iframe 内可能不触发，但保留兜底
       document.addEventListener("fullscreenchange", function () {
         if (!document.fullscreenElement) {
-          pauseGame();
+          pauseStory();
         }
       });
       document.addEventListener("visibilitychange", function () {
         if (document.hidden) {
-          pauseGame();
+          pauseStory();
         } else {
-          resumeGame();
+          resumeStory();
         }
       });
-      window.addEventListener("blur", pauseGame);
-      window.addEventListener("focus", resumeGame);
+      window.addEventListener("blur", pauseStory);
+      window.addEventListener("focus", resumeStory);
 
       loadingBar.style.display = "block";
 

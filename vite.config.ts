@@ -111,9 +111,9 @@ export default defineConfig(({ mode }) => {
               return 'page-music';
             }
             
-            // Game 页面
-            if (id.includes('components/Game')) {
-              return 'page-game';
+            // Story 页面
+            if (id.includes('components/Story')) {
+              return 'page-story';
             }
             
             // Contact 页面

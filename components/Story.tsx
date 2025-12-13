@@ -3,62 +3,62 @@ import { VelocityText } from './VelocityText';
 import { TransitionContext } from '../App';
 
 /**
- * Game Component
+ * Story Component
  * 
  * Behavior:
- * - Click "PLAY GAME" → Load game and enter fullscreen
- * - ESC to exit fullscreen → Game pauses, show gray overlay with "PAUSED"
- * - Click "CONTINUE" → Re-enter fullscreen, game resumes (no reload)
- * - Tab to background → Game pauses automatically
+ * - Click "PLAY STORY" → Load story and enter fullscreen
+ * - ESC to exit fullscreen → Story pauses, show gray overlay with "PAUSED"
+ * - Click "CONTINUE" → Re-enter fullscreen, story resumes (no reload)
+ * - Tab to background → Story pauses automatically
  * 
  * Technical:
  * - iframe stays mounted after first load (no reload on fullscreen toggle)
  * - Use postMessage to communicate pause/resume with Unity
  * - Gray overlay with blur effect when paused
  */
-const GAME_URL = '/game/index.html?v=20250306';
+const STORY_URL = '/story/index.html?v=20250306';
 
-const Game: React.FC = () => {
+const Story: React.FC = () => {
   // Get text visibility state from App.tsx's TransitionContext
   const { isTextVisible } = useContext(TransitionContext);
   
-  // Game loading state
+  // Story loading state
   const [isLoading, setIsLoading] = useState(false);
   
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Game started state - only load iframe after clicking play
-  const [gameStarted, setGameStarted] = useState(false);
+  // Story started state - only load iframe after clicking play
+  const [storyStarted, setStoryStarted] = useState(false);
   
-  // Game loaded state - true after iframe finishes loading
-  const [gameLoaded, setGameLoaded] = useState(false);
+  // Story loaded state - true after iframe finishes loading
+  const [storyLoaded, setStoryLoaded] = useState(false);
   
   // iframe reference
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // Container reference for fullscreen API
-  const gameContainerRef = useRef<HTMLDivElement>(null);
+  const storyContainerRef = useRef<HTMLDivElement>(null);
 
   // Detect if mobile device
   const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   /**
-   * Send message to iframe to pause/resume Unity game
+   * Send message to iframe to pause/resume Unity story
    */
-  const sendGameCommand = (command: 'pause' | 'resume') => {
-    const iframeWindow = iframeRef.current?.contentWindow as (Window & { pauseGame?: () => void; resumeGame?: () => void }) | null;
+  const sendStoryCommand = (command: 'pause' | 'resume') => {
+    const iframeWindow = iframeRef.current?.contentWindow as (Window & { pauseStory?: () => void; resumeStory?: () => void }) | null;
     if (!iframeWindow) return;
 
-    console.log('[Game] sendGameCommand:', command);
+    console.log('[Story] sendStoryCommand:', command);
     try {
-      if (command === 'pause' && typeof iframeWindow.pauseGame === 'function') {
-        iframeWindow.pauseGame();
-      } else if (command === 'resume' && typeof iframeWindow.resumeGame === 'function') {
-        iframeWindow.resumeGame();
+      if (command === 'pause' && typeof iframeWindow.pauseStory === 'function') {
+        iframeWindow.pauseStory();
+      } else if (command === 'resume' && typeof iframeWindow.resumeStory === 'function') {
+        iframeWindow.resumeStory();
       }
     } catch (err) {
-      console.warn('Direct game control failed, fallback to events/postMessage:', err);
+      console.warn('Direct story control failed, fallback to events/postMessage:', err);
     }
 
     // 模拟窗口焦点变化，触发 iframe 内部的 blur/focus 监听
@@ -77,17 +77,17 @@ const Game: React.FC = () => {
    * Handle play/continue button click
    */
   const handlePlayClick = async () => {
-    if (!gameContainerRef.current) return;
+    if (!storyContainerRef.current) return;
 
     try {
-      if (!gameStarted) {
-        // First time: start game and enter fullscreen
-        setGameStarted(true);
+      if (!storyStarted) {
+        // First time: start story and enter fullscreen
+        setStoryStarted(true);
         setIsLoading(true);
         // Small delay to ensure iframe is mounted
         setTimeout(async () => {
           try {
-            await gameContainerRef.current?.requestFullscreen();
+            await storyContainerRef.current?.requestFullscreen();
             setIsFullscreen(true);
           } catch (err) {
             console.warn('Fullscreen request failed:', err);
@@ -96,15 +96,15 @@ const Game: React.FC = () => {
       } else {
         // Already started: just enter fullscreen and resume
         if (!document.fullscreenElement) {
-          await gameContainerRef.current.requestFullscreen();
+          await storyContainerRef.current.requestFullscreen();
           setIsFullscreen(true);
-          sendGameCommand('resume');
+          sendStoryCommand('resume');
         }
       }
     } catch (error) {
       console.error('Fullscreen toggle failed:', error);
-      if (!gameStarted) {
-        setGameStarted(true);
+      if (!storyStarted) {
+        setStoryStarted(true);
         setIsLoading(true);
       }
     }
@@ -120,14 +120,14 @@ const Game: React.FC = () => {
       setTimeout(() => {
         const isNowFullscreen = !!document.fullscreenElement;
         setIsFullscreen(isNowFullscreen);
-        console.log('[Game] fullscreenchange →', isNowFullscreen ? 'ENTER' : 'EXIT');
+        console.log('[Story] fullscreenchange →', isNowFullscreen ? 'ENTER' : 'EXIT');
 
-        // Pause game when exiting fullscreen, resume when entering
-        if (gameLoaded) {
+        // Pause story when exiting fullscreen, resume when entering
+        if (storyLoaded) {
           if (isNowFullscreen) {
-            sendGameCommand('resume');
+            sendStoryCommand('resume');
           } else {
-            sendGameCommand('pause');
+            sendStoryCommand('pause');
           }
         }
       }, 100);
@@ -145,7 +145,7 @@ const Game: React.FC = () => {
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
-  }, [gameLoaded]);
+  }, [storyLoaded]);
 
   /**
    * iframe load completion callback
@@ -153,36 +153,36 @@ const Game: React.FC = () => {
   const handleIframeLoad = () => {
     setTimeout(() => {
       setIsLoading(false);
-      setGameLoaded(true);
+      setStoryLoaded(true);
     }, 500);
   };
 
-  // Determine if paused overlay should show (game loaded, not fullscreen, game started)
-  const showPausedOverlay = gameStarted && gameLoaded && !isFullscreen && !isLoading;
+  // Determine if paused overlay should show (story loaded, not fullscreen, story started)
+  const showPausedOverlay = storyStarted && storyLoaded && !isFullscreen && !isLoading;
 
   /**
    * Sync pause/resume with overlay state
    * - When overlay is visible (not fullscreen), send pause
-   * - When overlay is hidden and game started, send resume
+   * - When overlay is hidden and story started, send resume
    */
   useEffect(() => {
-    if (!gameLoaded) return;
+    if (!storyLoaded) return;
     // 如果仍然残留全屏，强制退出全屏避免状态不同步
     if (showPausedOverlay && document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
-    console.log('[Game] overlay state changed →', showPausedOverlay ? 'PAUSED' : 'ACTIVE');
+    console.log('[Story] overlay state changed →', showPausedOverlay ? 'PAUSED' : 'ACTIVE');
     if (showPausedOverlay) {
-      sendGameCommand('pause');
-    } else if (gameStarted) {
-      sendGameCommand('resume');
+      sendStoryCommand('pause');
+    } else if (storyStarted) {
+      sendStoryCommand('resume');
     }
-  }, [showPausedOverlay, gameLoaded, gameStarted]);
+  }, [showPausedOverlay, storyLoaded, storyStarted]);
 
   return (
     <div className="w-full h-full flex flex-col md:flex-row bg-brand-black relative">
       {/* Left Info Section - overflow-visible to prevent text clipping */}
-      <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-16 relative z-10 overflow-visible">
+      <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-[4.5rem] relative z-10 overflow-visible">
         
         {/* Main Title - use !overflow-visible to override VelocityText's overflow-hidden */}
         <div className="mb-8 overflow-visible">
@@ -194,7 +194,7 @@ const Game: React.FC = () => {
           />
         </div>
 
-        {/* Game Description Area */}
+        {/* Story Description Area */}
         <div 
           className="space-y-6 max-w-lg transition-all duration-700"
           style={{
@@ -210,17 +210,17 @@ const Game: React.FC = () => {
             <span className="bg-white/10 text-white px-3 py-1">2025</span>
           </div>
 
-          {/* Game Introduction */}
+          {/* Story Introduction */}
           <div className="space-y-3">
             <h3 className="text-sm font-bold tracking-wide text-gray-400 uppercase">
-              About This Game
+              About This Story
             </h3>
             <p className="text-sm leading-relaxed text-gray-300">
-              A Unity WebGL game project that can be experienced directly in your browser 
+              A Unity WebGL story project that can be experienced directly in your browser 
               without any downloads or installations required.
             </p>
             <p className="text-sm leading-relaxed text-gray-300">
-              This game demonstrates comprehensive skills in interaction design, 3D modeling, 
+              This story demonstrates comprehensive skills in interaction design, 3D modeling, 
               physics engine implementation, and user experience design.
             </p>
           </div>
@@ -233,7 +233,7 @@ const Game: React.FC = () => {
                 className="group flex items-center justify-between px-6 py-4 bg-brand-red text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-red"
               >
                 <span>
-                  {!gameStarted ? 'PLAY GAME' : (showPausedOverlay ? 'CONTINUE' : 'ENTER FULLSCREEN')}
+                  {!storyStarted ? 'PLAY STORY' : (showPausedOverlay ? 'CONTINUE' : 'ENTER FULLSCREEN')}
                 </span>
                 <span className="transform group-hover:translate-x-2 transition-transform">
                   ⇱
@@ -242,7 +242,7 @@ const Game: React.FC = () => {
             ) : (
               <div className="bg-yellow-500/10 border border-yellow-500/30 px-6 py-4 rounded">
                 <p className="text-sm text-yellow-400 leading-relaxed">
-                  📱 This game requires a desktop browser for the best experience. 
+                  📱 This story requires a desktop browser for the best experience. 
                   Mobile devices may encounter performance or compatibility issues.
                 </p>
               </div>
@@ -261,29 +261,29 @@ const Game: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Game Section */}
+      {/* Right Story Section */}
       <div 
-        id="hero-game"
-        ref={gameContainerRef}
+        id="hero-story"
+        ref={storyContainerRef}
         className="w-full md:w-1/2 h-full relative overflow-hidden"
         style={{ backgroundColor: '#000000' }}
       >
-        {/* Unity WebGL Game Embed - stays mounted after first load */}
-        {/* When paused: grayscale + dim filter to show gray game screen */}
-        {gameStarted && (
+        {/* Unity WebGL Story Embed - stays mounted after first load */}
+        {/* When paused: grayscale + dim filter to show gray story screen */}
+        {storyStarted && (
           <iframe 
-            id="portfolio-game-iframe"
+            id="portfolio-story-iframe"
             ref={iframeRef}
-            src={GAME_URL}
-            title="Portfolio Game - Unity WebGL"
+            src={STORY_URL}
+            title="Portfolio Story - Unity WebGL"
             className="w-full h-full border-0 absolute inset-0"
             style={{
               opacity: isLoading ? 0 : 1,
               transition: 'all 0.3s ease',
               backgroundColor: '#000000',
-              // When paused: apply grayscale and darken filter to show gray game screen
+              // When paused: apply grayscale and darken filter to show gray story screen
               filter: showPausedOverlay ? 'grayscale(1) brightness(0.4)' : 'none',
-              // Keep iframe visible to show game screen, just dimmed
+              // Keep iframe visible to show story screen, just dimmed
               pointerEvents: showPausedOverlay ? 'none' : 'auto'
             }}
             onLoad={handleIframeLoad}
@@ -291,8 +291,8 @@ const Game: React.FC = () => {
           />
         )}
 
-        {/* Initial Placeholder - before game starts */}
-        {!gameStarted && (
+        {/* Initial Placeholder - before story starts */}
+        {!storyStarted && (
           <div 
             className="absolute inset-0 flex flex-col items-center justify-center"
             style={{ backgroundColor: '#000000' }}
@@ -303,14 +303,14 @@ const Game: React.FC = () => {
                 READY TO PLAY
               </p>
               <p className="text-gray-500 text-sm">
-                Click "PLAY GAME" to start
+                Click "PLAY STORY" to start
               </p>
             </div>
           </div>
         )}
 
         {/* Loading State Overlay */}
-        {isLoading && gameStarted && (
+        {isLoading && storyStarted && (
           <div 
             className="absolute inset-0 flex flex-col items-center justify-center"
             style={{ backgroundColor: '#000000', zIndex: 10 }}
@@ -323,7 +323,7 @@ const Game: React.FC = () => {
             </div>
             <div className="text-center space-y-2">
               <p className="text-white font-bold text-sm tracking-widest animate-pulse">
-                LOADING GAME
+                LOADING STORY
               </p>
               <p className="text-gray-500 text-xs">
                 Initializing Unity WebGL Runtime...
@@ -337,12 +337,12 @@ const Game: React.FC = () => {
           </div>
         )}
 
-        {/* PAUSED Overlay - semi-transparent to show gray game screen underneath */}
+        {/* PAUSED Overlay - semi-transparent to show gray story screen underneath */}
         {showPausedOverlay && (
           <div 
             className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer"
             style={{ 
-              // Semi-transparent black overlay to show game screen underneath (now grayscale)
+              // Semi-transparent black overlay to show story screen underneath (now grayscale)
               backgroundColor: 'rgba(0, 0, 0, 0.6)',
               zIndex: 20
             }}
@@ -360,7 +360,7 @@ const Game: React.FC = () => {
               </p>
               
               <p className="text-gray-300 text-sm max-w-xs">
-                Game is paused. Click here or press "CONTINUE" button to resume playing.
+                Story is paused. Click here or press "CONTINUE" button to resume playing.
               </p>
               
               {/* Play button hint */}
@@ -374,7 +374,7 @@ const Game: React.FC = () => {
         )}
 
         {/* Fullscreen Exit Hint - only in fullscreen */}
-        {isFullscreen && !isLoading && gameStarted && (
+        {isFullscreen && !isLoading && storyStarted && (
           <div 
             className="absolute top-4 left-1/2 transform -translate-x-1/2 animate-fadeIn pointer-events-none"
             style={{ zIndex: 30 }}
@@ -389,4 +389,8 @@ const Game: React.FC = () => {
   );
 };
 
-export default Game;
+export default Story;
+
+
+
+

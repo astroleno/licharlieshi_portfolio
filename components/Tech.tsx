@@ -288,8 +288,8 @@ const Tech: React.FC = () => {
           </div>
         </div>
 
-        {/* Left Content Column - 参考Game.tsx的布局风格 */}
-        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-16 relative bg-brand-black overflow-y-auto py-24">
+        {/* Left Content Column - 参考Story.tsx的布局风格 */}
+        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-[4.5rem] relative bg-brand-black overflow-y-auto py-24">
           
           {/* ========== 主要信息区 ========== */}
           
@@ -298,7 +298,7 @@ const Tech: React.FC = () => {
             {activeProject.name}
           </h2>
 
-          {/* 标签组 - 参考Game页面的标签样式 */}
+          {/* 标签组 - 参考Story页面的标签样式 */}
           <div className="flex flex-wrap gap-3 text-xs font-bold tracking-widest mb-8">
             <span className="bg-brand-red text-black px-3 py-1">{activeProject.client}</span>
             <span className="bg-white/10 text-white px-3 py-1">{activeProject.year}</span>
@@ -309,7 +309,7 @@ const Tech: React.FC = () => {
 
           {/* ========== 关于项目区 ========== */}
           <div className="space-y-4 max-w-lg mb-10">
-            {/* About标题 - 参考Game的小标题风格 */}
+            {/* About标题 - 参考Story的小标题风格 */}
             <h3 className="text-sm font-bold tracking-wide text-gray-400 uppercase">
               About This Project
             </h3>
@@ -431,7 +431,7 @@ const Tech: React.FC = () => {
             </div>
           )}
 
-          {/* ========== 链接区 - CTA按钮风格（参考Game） ========== */}
+          {/* ========== 链接区 - CTA按钮风格（参考Story） ========== */}
           {activeProject.links && (
             <div className="flex flex-col gap-3 pt-4">
               {/* GitHub - 主要CTA按钮 */}
