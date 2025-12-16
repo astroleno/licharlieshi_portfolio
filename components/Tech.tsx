@@ -1,10 +1,11 @@
-import React, { useState, useContext, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useContext, useMemo, useEffect, useRef, useCallback } from 'react';
 import { PROJECTS } from '../constants';
 import { Project } from '../types';
 import { TransitionContext } from '../App';
 import LazyYouTube, { extractYouTubeId } from './LazyYouTube';
 
 const SCROLL_REPEAT_COUNT = 8;
+const PROJECTS_WITHOUT_CTA = new Set(['cstore', 'qiesax', 'jazzwithli', 'boxofworld']);
 
 const Tech: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -21,10 +22,33 @@ const Tech: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const heroVideoContainerRef = useRef<HTMLDivElement>(null);
+  // 详情页左侧内容区域的滚动容器
+  // 每次打开 / 切换项目时，将其滚动条重置到顶部，保证所有项目初始布局一致
+  const detailScrollRef = useRef<HTMLDivElement>(null);
   // Duplicate the projects so we can loop the scroll position without blank gaps
   const infiniteProjects = useMemo(() => (
     Array.from({ length: SCROLL_REPEAT_COUNT }, () => PROJECTS).flat()
   ), []);
+
+  const shouldRenderFakeButtons = activeProject ? PROJECTS_WITHOUT_CTA.has(activeProject.id) : false;
+
+  const resetDetailScrollPosition = useCallback((projectId?: string) => {
+    const container = detailScrollRef.current;
+    if (!container) return;
+
+    try {
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      } else {
+        container.scrollTop = 0;
+      }
+      if (projectId) {
+        console.log('[Tech] Detail scroll reset to top for project:', projectId);
+      }
+    } catch (error) {
+      console.error('[Tech] Failed to reset detail scroll position:', error);
+    }
+  }, []);
   
   // Initialize default video
   useEffect(() => {
@@ -110,6 +134,7 @@ const Tech: React.FC = () => {
   }, []);
 
   const handleProjectClick = (project: Project) => {
+    resetDetailScrollPosition(project.id);
     setActiveProject(project);
     setIsTechnicalDetailsOpen(true);
   };
@@ -123,6 +148,7 @@ const Tech: React.FC = () => {
     if (!activeProject) return;
     const currentIndex = PROJECTS.findIndex(p => p.id === activeProject.id);
     const nextIndex = (currentIndex + 1) % PROJECTS.length;
+    resetDetailScrollPosition(PROJECTS[nextIndex].id);
     setActiveProject(PROJECTS[nextIndex]);
     setIsTechnicalDetailsOpen(true);
   };
@@ -131,6 +157,7 @@ const Tech: React.FC = () => {
     if (!activeProject) return;
     const currentIndex = PROJECTS.findIndex(p => p.id === activeProject.id);
     const prevIndex = (currentIndex - 1 + PROJECTS.length) % PROJECTS.length;
+    resetDetailScrollPosition(PROJECTS[prevIndex].id);
     setActiveProject(PROJECTS[prevIndex]);
     setIsTechnicalDetailsOpen(true);
   };
@@ -143,6 +170,13 @@ const Tech: React.FC = () => {
       setActiveProject(null);
     }
   }, [isTextVisible, activeProject]);
+
+  // 当 activeProject 变化时，重置详情页左侧滚动区域到顶部
+  // 确保所有项目在「刚进入详情页」时的布局一致（标题、About、视频等都从顶部开始）
+  useEffect(() => {
+    if (!activeProject) return;
+    resetDetailScrollPosition(activeProject.id);
+  }, [activeProject, resetDetailScrollPosition]);
 
   // Get current video URL for the right side player
   // Use hovered project's video, or fall back to the last active one
@@ -278,18 +312,36 @@ const Tech: React.FC = () => {
       {/* Detail View Overlay - Only renders when activeProject is set */}
       {activeProject && (
         <div className="absolute inset-0 z-30 bg-brand-black text-white flex flex-col md:flex-row animate-fadeIn w-full h-full">
-        {/* Top Navigation Bar */}
-        <div className="absolute top-0 left-0 right-0 p-8 md:p-12 flex justify-between items-start z-40">
-          <button onClick={handleClose} className="text-xs font-bold tracking-widest hover:text-brand-red transition-colors">CLOSE</button>
-          
-          <div className="flex gap-12">
-             <button onClick={handlePrev} className="text-xs font-bold tracking-widest hover:text-brand-red transition-colors">PREV</button>
-             <button onClick={handleNext} className="text-xs font-bold tracking-widest hover:text-brand-red transition-colors">NEXT</button>
+        {/* Top Navigation Bar - 将 CLOSE 移到右上角，与 PREV / NEXT 并列 */}
+        <div className="absolute top-0 left-0 right-0 p-8 md:p-12 flex justify-end items-start z-40">
+          <div className="flex gap-8 md:gap-12 items-center">
+            <button 
+              onClick={handlePrev} 
+              className="text-xs font-bold tracking-widest hover:text-brand-red transition-colors"
+            >
+              PREV
+            </button>
+            <button 
+              onClick={handleNext} 
+              className="text-xs font-bold tracking-widest hover:text-brand-red transition-colors"
+            >
+              NEXT
+            </button>
+            <button 
+              onClick={handleClose} 
+              className="text-xs font-bold tracking-widest hover:text-brand-red transition-colors"
+            >
+              CLOSE
+            </button>
           </div>
         </div>
 
         {/* Left Content Column - 参考Story.tsx的布局风格 */}
-        <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-8 md:px-[4.5rem] relative bg-brand-black overflow-y-auto py-24">
+        {/* 通过 detailScrollRef 控制滚动位置，确保每个项目详情初始时都从顶部开始展示 */}
+        <div
+          ref={detailScrollRef}
+          className={`w-full md:w-1/2 h-full flex flex-col justify-start py-16 md:py-20 px-8 md:px-[4.5rem] relative bg-brand-black overflow-y-auto`}
+        >
           
           {/* ========== 主要信息区 ========== */}
           
@@ -432,48 +484,83 @@ const Tech: React.FC = () => {
           )}
 
           {/* ========== 链接区 - CTA按钮风格（参考Story） ========== */}
-          {activeProject.links && (
-            <div className="flex flex-col gap-3 pt-4">
-              {/* GitHub - 主要CTA按钮 */}
-              {activeProject.links.github && (
-                <a 
-                  href={activeProject.links.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-6 py-4 bg-brand-red text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-red"
-                >
-                  <span>View on GitHub</span>
-                  <span className="transform group-hover:translate-x-2 transition-transform">→</span>
-                </a>
-              )}
-              
-              {/* Live Demo - 次要按钮 */}
-              {activeProject.links.live && (
-                <a 
-                  href={activeProject.links.live}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black"
-                >
-                  <span>See it Live</span>
-                  <span className="transform group-hover:translate-x-2 transition-transform">→</span>
-                </a>
-              )}
-              
-              {/* Conference - 只在没有paper submission时显示 */}
-              {activeProject.links.conference && !activeProject.paperSubmission && (
-                <a 
-                  href={activeProject.links.conference}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black"
-                >
-                  <span>Conference</span>
-                  <span className="transform group-hover:translate-x-2 transition-transform">→</span>
-                </a>
-              )}
-            </div>
-          )}
+          {(() => {
+            const links = activeProject.links;
+            // 这些项目需要展示占位 CTA 按钮，但按钮不跳转
+            const renderFakeButtons = shouldRenderFakeButtons;
+
+            const hasAnyLink = !!(
+              links?.github ||
+              links?.live ||
+              (links?.conference && !activeProject.paperSubmission)
+            );
+
+            if (!hasAnyLink && !renderFakeButtons) return null;
+
+            return (
+              <div className="flex flex-col gap-3 pt-4">
+                {/* GitHub - 主要CTA按钮 */}
+                {links?.github && (
+                  <a 
+                    href={links.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between px-6 py-4 bg-brand-red text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-red"
+                  >
+                    <span>View on GitHub</span>
+                    <span className="transform group-hover:translate-x-2 transition-transform">→</span>
+                  </a>
+                )}
+                {!links?.github && renderFakeButtons && (
+                  <button
+                    type="button"
+                    disabled
+                    className="group flex items-center justify-between px-6 py-4 bg-brand-red text-white font-bold text-sm tracking-wider uppercase cursor-not-allowed"
+                  >
+                    <span>View on GitHub</span>
+                    <span className="transform transition-transform">→</span>
+                  </button>
+                )}
+                
+                {/* Live Demo - 次要按钮 */}
+                {links?.live && (
+                  <a 
+                    href={links.live}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black"
+                  >
+                    <span>See it Live</span>
+                    <span className="transform group-hover:translate-x-2 transition-transform">→</span>
+                  </a>
+                )}
+                
+                {/* Conference - 只在没有paper submission时显示 */}
+                {links?.conference && !activeProject.paperSubmission && (
+                  <a 
+                    href={links.conference}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black"
+                  >
+                    <span>Conference</span>
+                    <span className="transform group-hover:translate-x-2 transition-transform">→</span>
+                  </a>
+                )}
+
+                {!links?.live && renderFakeButtons && (
+                  <button
+                    type="button"
+                    disabled
+                    className="group flex items-center justify-between px-6 py-4 bg-white/10 text-white font-bold text-sm tracking-wider uppercase cursor-not-allowed"
+                  >
+                    <span>See it Live</span>
+                    <span className="transform transition-transform">→</span>
+                  </button>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right Visual Column */}

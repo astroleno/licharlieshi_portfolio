@@ -16,10 +16,13 @@ export const PROJECTS: Project[] = [
     tags: ['SPATIAL AUDIO', 'COMPUTER VISION', 'PERFORMANCE SYSTEM'],
     imageUrl: 'https://picsum.photos/seed/pangu/1200/800',
     videoUrl: '/pangu.webm',
-    youtubeUrl: 'https://www.youtube.com/embed/SbW4J_I4MYo',
+    // YouTube 演示视频链接（在 Tech 页面中使用 LazyYouTube 按需加载）
+    // 已根据用户最新要求更新为新的短链接地址
+    youtubeUrl: 'https://youtu.be/dCMUUlnRz4A',
     links: {
       github: 'https://github.com/CharlieSL1/PanGu-Spatial-Audio-Performance-Control-System',
-      live: 'https://www.youtube.com/watch?v=SbW4J_I4MYo'
+      // Tech 详情页中的「See it Live」按钮也指向相同的演示视频
+      live: 'https://youtu.be/dCMUUlnRz4A'
     }
   },
   {
@@ -36,8 +39,14 @@ export const PROJECTS: Project[] = [
     tags: ['GPT-4', 'SEED-VC', 'EMBEDDED SYSTEM', 'RASPBERRY PI'],
     imageUrl: 'https://picsum.photos/seed/welcomeback/1200/800',
     videoUrl: '/welcomeback.webm',
+    // WelcomeBack 在 Tech 详情页中展示的 YouTube 演示视频链接
+    // 与 PANGU / DreamPillow 保持一致的配置：一个用于详情页视频容器，一个用于「See it Live」跳转
+    // 详情页右侧的 LazyYouTube 会优先使用 youtubeUrl 来创建 iframe
+    youtubeUrl: 'https://www.youtube.com/watch?v=OlU-T61ObPk',
     links: {
-      github: 'https://github.com/CharlieSL1/Welcome_Back'
+      github: 'https://github.com/CharlieSL1/Welcome_Back',
+      // Tech 页面的「See it Live」按钮，直接跳转到同一个 WelcomeBack 演示视频页面
+      live: 'https://www.youtube.com/watch?v=OlU-T61ObPk'
     }
   },
   {
@@ -55,7 +64,7 @@ export const PROJECTS: Project[] = [
     description: 'End-to-end and diffusion models have improved audio fidelity for text-to-music (T2M) generation, yet practical deployment in music production remains limited by the lack of fine-grained control and editability. Most methods map natural-language prompts directly to audio, keeping control at high-level semantics, and the outputs are hard to revise or version. We reframe the task from generating one-shot waveforms to generating an interpretable, durable, and editable sound specification. CStore presents a Csound-based framework that represents generated music as human-readable orchestra and score files, covering fully controllable synthesizer parameters and note-level events.',
     tags: ['MACHINE LEARNING', 'CSOUND', 'AUDIO SYNTHESIS', 'PYTHON'],
     imageUrl: 'https://picsum.photos/seed/cstore/1200/800',
-    videoUrl: '/c.webm',
+    videoUrl: '/cstore.webm',
     links: {
       conference: 'https://www.ieeesmc.org/cai-2026/'
     }
@@ -92,10 +101,14 @@ export const PROJECTS: Project[] = [
     tags: ['HARDWARE DESIGN', 'ULTRASONIC MODULATION', 'C++', '3D PRINTING'],
     imageUrl: 'https://picsum.photos/seed/dreampillow/1200/800',
     videoUrl: '/dreampillow.webm',
-    youtubeUrl: 'https://www.youtube.com/embed/8rhZtqXsF-4',
+    // DreamPillow 在 Tech 详情页中展示的 YouTube 演示视频链接
+    // 根据用户最新需求，将原有的长链接（含 /embed/ 和 /watch?v=）统一替换为短链接形式
+    // 这样在 LazyYouTube 中提取 videoId 时也能保持一致的解析逻辑
+    youtubeUrl: 'https://www.youtube.com/watch?v=dCMUUlnRz4A',
     links: {
       github: 'https://github.com/CharlieSL1/DreamPillow',
-      live: 'https://www.youtube.com/watch?v=8rhZtqXsF-4'
+      // Tech 页面的「See it Live」按钮也会跳转到同一个 DreamPillow 演示视频
+      live: 'https://www.youtube.com/watch?v=dCMUUlnRz4A'
     }
   },
   {
@@ -108,7 +121,7 @@ export const PROJECTS: Project[] = [
     description: 'Qi(ESax) is a groundbreaking electronic saxophone that introduces the first independent left-right hand control concept in electronic wind instruments. By integrating Trill sensors for timbre switching and pitch bending, combined with accelerometer-based spatial effects, Qi(ESax) opens new dimensions for electronic saxophone performance. This innovative control scheme allows performers to manipulate multiple sound parameters simultaneously, creating expressive possibilities that were previously unavailable in traditional electronic wind instruments.',
     tags: ['SENSOR INTEGRATION', 'PCB DESIGN', 'INTERACTION DESIGN', 'TRILL SENSORS'],
     imageUrl: 'https://picsum.photos/seed/qiesax/1200/800',
-    videoUrl: '/a.webm'
+    videoUrl: '/qi.webm'
   },
   {
     id: 'boxofworld',
@@ -120,7 +133,7 @@ export const PROJECTS: Project[] = [
     description: 'Box of World is a visual modular-synthesis sandbox that injects controlled randomness to break habitual timbre choices, while serving as an intuitive teaching tool that helps children and beginners quickly grasp synth structure and patching. By combining playful visual design with fundamental synthesis concepts, Box of World boosts creativity, understanding, and fun, making modular synthesis accessible to newcomers while encouraging experienced users to explore beyond their comfort zones.',
     tags: ['CREATIVE CODING', 'VISUAL SYNTHESIS', 'EDUCATION'],
     imageUrl: 'https://picsum.photos/seed/boxofworld/1200/800',
-    videoUrl: '/b.webm'
+    videoUrl: '/boxofworld.webm'
   },
   {
     id: 'jazzwithli',
@@ -135,7 +148,7 @@ export const PROJECTS: Project[] = [
     description: 'Jazz with Li is a comprehensive MIDI dataset designed to capture the complexity and nuance of advanced jazz music theory. The dataset includes annotated chord progressions, voicings, and modal interchanges. This resource aims to support machine learning research in jazz composition, automatic harmonization, and style transfer, providing a rich foundation for computational approaches to jazz music generation and analysis.',
     tags: ['DATASET CURATION', 'MUSIC THEORY', 'MIDI PROCESSING', 'MACHINE LEARNING'],
     imageUrl: 'https://picsum.photos/seed/jazzwithli/1200/800',
-    videoUrl: '/c.webm'
+    videoUrl: '/jazzwithli.webm'
   }
 ];
 

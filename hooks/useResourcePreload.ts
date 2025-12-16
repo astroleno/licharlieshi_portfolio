@@ -173,7 +173,7 @@ export const STATIC_RESOURCES = {
   // Tech 页面前几个项目，用户最可能 hover 到
   highPriorityVideos: [
     '/welcomeback.webm',  // Tech 页面第 2 个项目
-    '/c.webm',            // Tech 页面第 3 个项目（CSTORE）
+    '/cstore.webm',       // Tech 页面第 3 个项目（CSTORE）
     '/dreampillow.webm',  // Tech 页面第 4 个项目
     '/contact.webm'       // Contact 页面视频
   ],
@@ -181,8 +181,9 @@ export const STATIC_RESOURCES = {
   // P2: 中优先级视频 - 只预加载 metadata
   // 其他可能用到的视频
   normalPriorityVideos: [
-    '/a.webm',            // Tech 页面（Qi ESax）
-    '/b.webm',            // Tech 页面（Box of World）
+    '/qi.webm',           // Tech 页面（Qi ESax）
+    '/boxofworld.webm',   // Tech 页面（Box of World）
+    '/jazzwithli.webm',   // Tech 页面（Jazz with Li）
     '/live.webm',         // Music 页面
     '/tv.webm',           // Music 页面
     '/games.webm',        // Music 页面
@@ -313,4 +314,3 @@ export const useResourcePreload = (config: ResourcePreloadConfig): void => {
 };
 
 export default useResourcePreload;
-
