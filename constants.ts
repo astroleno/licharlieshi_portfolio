@@ -62,6 +62,13 @@ export const PROJECTS: Project[] = [
     ],
     paperSubmission: 'Submitted to IEEE Conference on Artificial Intelligence (IEEE CAI)',
     description: 'End-to-end and diffusion models have improved audio fidelity for text-to-music (T2M) generation, yet practical deployment in music production remains limited by the lack of fine-grained control and editability. Most methods map natural-language prompts directly to audio, keeping control at high-level semantics, and the outputs are hard to revise or version. We reframe the task from generating one-shot waveforms to generating an interpretable, durable, and editable sound specification. CStore presents a Csound-based framework that represents generated music as human-readable orchestra and score files, covering fully controllable synthesizer parameters and note-level events.',
+    // CStore 技术详情：ML 数据处理流程
+    technicalDetails: {
+      title: 'Data Processing Pipeline',
+      overview: 'The CStore pipeline processes audio through multiple stages: .csd files are converted to .wav, then transformed into mel spectrograms. A CNN model learns the mapping between audio features and Csound parameters through supervised learning, enabling text-to-music generation with fine-grained control.',
+      // 架构图：ML 数据处理流程图（.csd → .wav → mel → CNN → .csd）
+      architectureImage: '/cstore_flow.webp'
+    },
     tags: ['MACHINE LEARNING', 'CSOUND', 'AUDIO SYNTHESIS', 'PYTHON'],
     imageUrl: 'https://picsum.photos/seed/cstore/1200/800',
     videoUrl: '/cstore.webm',
@@ -96,7 +103,9 @@ export const PROJECTS: Project[] = [
         'External Box: Houses Arduino Uno, motor driver, and connectors (Power, Button, Motor, USB)',
         '3D-Printed Joining Part: Pre-connected to the rotational stage, links to the linear stage',
         '12V Power Supply: Powers the linear stage through the external box'
-      ]
+      ],
+      // 架构图：DreamPillow 系统三层架构（Audio Layer → Encoding → Decoding）
+      architectureImage: '/dreampillow_flow.webp'
     },
     tags: ['HARDWARE DESIGN', 'ULTRASONIC MODULATION', 'C++', '3D PRINTING'],
     imageUrl: 'https://picsum.photos/seed/dreampillow/1200/800',

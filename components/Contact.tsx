@@ -402,23 +402,60 @@ const Contact: React.FC = () => {
            SCROLL TO UNVEIL
          </div>
 
+         {/* 
+           社交链接区域
+           - 使用 flex 布局，响应式间距
+           - 每个链接包含标签 + 实际信息
+           - hover 时变红色，增强交互反馈
+         */}
          <div 
            ref={socialRef}
-           className="absolute flex items-center gap-8 md:gap-[4.5rem] opacity-0"
+           className="absolute flex flex-col md:flex-row items-center gap-4 md:gap-[3rem] opacity-0"
          >
-           <a href="mailto:hello@example.com" className="group relative">
-              <span className="text-white text-sm md:text-xl font-bold tracking-[0.2em] uppercase font-sans hover:text-brand-red transition-colors duration-300">
-                Mail
+           {/* Email 链接 - 使用 mailto 协议 */}
+           <a 
+             href="mailto:licharlieshi@gmail.com" 
+             className="group relative flex flex-col items-center"
+           >
+              <span className="text-white/50 text-[10px] md:text-xs tracking-[0.3em] uppercase font-sans mb-1">
+                Email
+              </span>
+              <span className="text-white text-xs md:text-base font-bold tracking-[0.1em] font-sans group-hover:text-brand-red transition-colors duration-300">
+                licharlieshi@gmail.com
               </span>
            </a>
-           <a href="#" className="group relative">
-              <span className="text-white text-sm md:text-xl font-bold tracking-[0.2em] uppercase font-sans hover:text-brand-red transition-colors duration-300">
-                Lnkd
+           
+           {/* 分隔符 - 仅桌面端显示 */}
+           <span className="hidden md:block text-white/20 text-xl">|</span>
+           
+           {/* 电话链接 - 使用 tel 协议，可直接拨打 */}
+           <a 
+             href="tel:+18572105211" 
+             className="group relative flex flex-col items-center"
+           >
+              <span className="text-white/50 text-[10px] md:text-xs tracking-[0.3em] uppercase font-sans mb-1">
+                Phone
+              </span>
+              <span className="text-white text-xs md:text-base font-bold tracking-[0.1em] font-sans group-hover:text-brand-red transition-colors duration-300">
+                +1 857 210 5211
               </span>
            </a>
-           <a href="#" className="group relative">
-              <span className="text-white text-sm md:text-xl font-bold tracking-[0.2em] uppercase font-sans hover:text-brand-red transition-colors duration-300">
-                Insta
+           
+           {/* 分隔符 - 仅桌面端显示 */}
+           <span className="hidden md:block text-white/20 text-xl">|</span>
+           
+           {/* Instagram 链接 - 新窗口打开 */}
+           <a 
+             href="https://www.instagram.com/charlie_sliii/" 
+             target="_blank"
+             rel="noopener noreferrer"
+             className="group relative flex flex-col items-center"
+           >
+              <span className="text-white/50 text-[10px] md:text-xs tracking-[0.3em] uppercase font-sans mb-1">
+                Instagram
+              </span>
+              <span className="text-white text-xs md:text-base font-bold tracking-[0.1em] font-sans group-hover:text-brand-red transition-colors duration-300">
+                @charlie_sliii
               </span>
            </a>
          </div>

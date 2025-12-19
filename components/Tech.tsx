@@ -7,11 +7,41 @@ import LazyYouTube, { extractYouTubeId } from './LazyYouTube';
 const SCROLL_REPEAT_COUNT = 8;
 const PROJECTS_WITHOUT_CTA = new Set(['cstore', 'qiesax', 'jazzwithli', 'boxofworld']);
 
+/**
+ * 需要在详情页右侧展示可滚动长图（而非视频）的项目映射表
+ * key: 项目 ID
+ * value: 对应的图片路径（相对于 public 目录）
+ */
+const SCROLLABLE_IMAGE_PROJECTS: Record<string, string> = {
+  'boxofworld': '/boxofworld.webp'
+};
+
+/**
+ * 需要在详情页右侧展示可缩放图片（滚轮控制缩放，居中对齐）的项目映射表
+ * key: 项目 ID
+ * value: 对应的图片路径（相对于 public 目录）
+ * 
+ * 缩放效果参考 Home.tsx：
+ * - 初始为最大放大（2x）
+ * - 滚轮向下：缩小图片
+ * - 滚轮向上：放大图片
+ * - 缩放范围：1x ~ 2x
+ * - 放大时不限制容器，可超出边界显示
+ */
+const ZOOMABLE_IMAGE_PROJECTS: Record<string, string> = {
+  'qiesax': '/QI.webp'
+};
+
 const Tech: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isHeroVideoReady, setHeroVideoReady] = useState(false);
   const [isTechnicalDetailsOpen, setIsTechnicalDetailsOpen] = useState(true);
+  
+  // ========== 架构图 Modal 弹窗状态 ==========
+  // 用于展示 technicalDetails.architectureImage 的全屏弹窗
+  const [isArchModalOpen, setIsArchModalOpen] = useState(false);
+  const [archModalImageUrl, setArchModalImageUrl] = useState<string | null>(null);
   
   // Transition context to control visibility
   const { isTextVisible } = useContext(TransitionContext);
@@ -25,12 +55,46 @@ const Tech: React.FC = () => {
   // 详情页左侧内容区域的滚动容器
   // 每次打开 / 切换项目时，将其滚动条重置到顶部，保证所有项目初始布局一致
   const detailScrollRef = useRef<HTMLDivElement>(null);
+  
+  // ========== 可缩放图片相关 ==========
+  // 用于 qiesax 等项目的滚轮缩放效果
+  const zoomableContainerRef = useRef<HTMLDivElement>(null);
+  const zoomProgressRef = useRef(0);  // 缩放进度 (0-1)
+  const zoomImageRef = useRef<HTMLImageElement>(null);
+  
+  // ========== 架构图 Modal 弹窗相关 ==========
+  // 用于全屏展示 architectureImage 的 Modal 组件
+  const archModalContainerRef = useRef<HTMLDivElement>(null);
+  const archModalImageRef = useRef<HTMLImageElement>(null);
+  const archZoomProgressRef = useRef(0);  // Modal 内图片缩放进度 (0-1)
   // Duplicate the projects so we can loop the scroll position without blank gaps
   const infiniteProjects = useMemo(() => (
     Array.from({ length: SCROLL_REPEAT_COUNT }, () => PROJECTS).flat()
   ), []);
 
   const shouldRenderFakeButtons = activeProject ? PROJECTS_WITHOUT_CTA.has(activeProject.id) : false;
+
+  // ========== 架构图 Modal 打开/关闭函数 ==========
+  /**
+   * 打开架构图全屏弹窗
+   * @param imageUrl 架构图的图片路径
+   */
+  const openArchModal = useCallback((imageUrl: string) => {
+    setArchModalImageUrl(imageUrl);
+    setIsArchModalOpen(true);
+    archZoomProgressRef.current = 0;  // 重置缩放进度
+    console.log('[Tech] 打开架构图 Modal:', imageUrl);
+  }, []);
+
+  /**
+   * 关闭架构图全屏弹窗
+   */
+  const closeArchModal = useCallback(() => {
+    setIsArchModalOpen(false);
+    setArchModalImageUrl(null);
+    archZoomProgressRef.current = 0;  // 重置缩放进度
+    console.log('[Tech] 关闭架构图 Modal');
+  }, []);
 
   const resetDetailScrollPosition = useCallback((projectId?: string) => {
     const container = detailScrollRef.current;
@@ -178,6 +242,128 @@ const Tech: React.FC = () => {
     resetDetailScrollPosition(activeProject.id);
   }, [activeProject, resetDetailScrollPosition]);
 
+  // ========== 架构图 Modal ESC 键关闭 & 滚轮缩放 ==========
+  // 当 Modal 打开时，监听 ESC 键关闭和滚轮缩放
+  useEffect(() => {
+    if (!isArchModalOpen) return;
+
+    // ESC 键关闭 Modal
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeArchModal();
+      }
+    };
+
+    // 滚轮缩放（在 Modal 容器内）
+    const container = archModalContainerRef.current;
+    const image = archModalImageRef.current;
+    const gsap = (window as any).gsap;
+
+    if (container && image && gsap) {
+      // 初始化图片缩放状态
+      gsap.set(image, { scale: 1, transformOrigin: 'center center' });
+
+      const handleWheel = (e: WheelEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // 计算新的进度值（0-1 之间）
+        // deltaY 正值 = 向下滚动（放大），负值 = 向上滚动（缩小）
+        const delta = e.deltaY * 0.002;
+        const newProgress = Math.max(0, Math.min(1, archZoomProgressRef.current + delta));
+        archZoomProgressRef.current = newProgress;
+
+        // 计算缩放值：1x ~ 3x（Modal 内允许更大缩放以查看细节）
+        const targetScale = 1 + newProgress * 2;
+
+        gsap.to(image, {
+          scale: targetScale,
+          duration: 0.3,
+          ease: "power2.out",
+          overwrite: true
+        });
+
+        console.log('[Tech] Modal 图片缩放:', (newProgress * 100).toFixed(1) + '%', '缩放:', targetScale.toFixed(2) + 'x');
+      };
+
+      container.addEventListener('wheel', handleWheel, { passive: false });
+      document.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        container.removeEventListener('wheel', handleWheel);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+
+    // 如果没有 gsap，只监听 ESC 键
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isArchModalOpen, closeArchModal]);
+
+  // ========== 可缩放图片的滚轮事件处理 ==========
+  // 参考 Home.tsx 实现：滚轮控制图片缩放
+  // 初始为最大放大（2x），滚轮向下缩小，向上放大
+  useEffect(() => {
+    // 只在当前项目是可缩放图片项目时启用
+    if (!activeProject || !ZOOMABLE_IMAGE_PROJECTS[activeProject.id]) {
+      // 重置缩放进度
+      zoomProgressRef.current = 0;
+      return;
+    }
+
+    const gsap = (window as any).gsap;
+    const container = zoomableContainerRef.current;
+    const image = zoomImageRef.current;
+
+    if (!gsap || !container || !image) return;
+
+    console.log('[Tech] 初始化可缩放图片滚轮事件:', activeProject.id);
+    
+    // 初始为最大放大（进度=0 对应 2x，进度=1 对应 1x）
+    zoomProgressRef.current = 0;
+    gsap.set(image, { scale: 2, transformOrigin: 'center center' });
+
+    // 滚轮事件处理器
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();  // 阻止默认滚动行为
+      e.stopPropagation(); // 阻止事件冒泡
+      
+      // 计算新的进度值（0-1 之间）
+      // deltaY 正值 = 向下滚动（缩小），负值 = 向上滚动（放大）
+      const delta = e.deltaY * 0.002;  // 调整灵敏度
+      const newProgress = Math.max(0, Math.min(1, zoomProgressRef.current + delta));
+      
+      zoomProgressRef.current = newProgress;
+
+      // 计算缩放值：2x ~ 1x（进度0=2x, 进度1=1x）
+      const targetScale = 2 - newProgress;
+
+      // 平滑过渡到新缩放值
+      gsap.to(image, {
+        scale: targetScale,
+        duration: 0.3,
+        ease: "power2.out",
+        overwrite: true
+      });
+
+      console.log('[Tech] 图片缩放进度:', (newProgress * 100).toFixed(1) + '%', '缩放:', targetScale.toFixed(2) + 'x');
+    };
+
+    // 添加滚轮事件监听（passive: false 允许 preventDefault）
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    // 清理函数
+    return () => {
+      console.log('[Tech] 清理可缩放图片事件监听器');
+      container.removeEventListener('wheel', handleWheel);
+      
+      // 重置缩放进度
+      zoomProgressRef.current = 0;
+    };
+  }, [activeProject]);
+
   // Get current video URL for the right side player
   // Use hovered project's video, or fall back to the last active one
   const currentRightVideoUrl = hoveredIndex !== null 
@@ -310,6 +496,48 @@ const Tech: React.FC = () => {
       </div>
 
       {/* Detail View Overlay - Only renders when activeProject is set */}
+      {/* ========== 架构图全屏 Modal 弹窗 ========== */}
+      {/* 点击背景或按 ESC 关闭，滚轮控制缩放 */}
+      {isArchModalOpen && archModalImageUrl && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center animate-fadeIn"
+          onClick={closeArchModal}
+        >
+          {/* 顶部操作栏 */}
+          <div className="absolute top-8 right-8 flex gap-8 items-center z-10">
+            <span className="text-white/40 text-xs tracking-wider hidden md:block">
+              SCROLL TO ZOOM
+            </span>
+            <button
+              onClick={closeArchModal}
+              className="text-xs font-bold tracking-widest text-white/60 hover:text-white transition-colors"
+            >
+              CLOSE
+            </button>
+          </div>
+
+          {/* 图片容器（可缩放），点击任意位置关闭 */}
+          <div 
+            ref={archModalContainerRef}
+            className="w-full h-full flex items-center justify-center p-12 overflow-visible cursor-pointer"
+          >
+            <img 
+              ref={archModalImageRef}
+              src={archModalImageUrl} 
+              alt="Architecture Diagram"
+              loading="eager"
+              decoding="async"
+              className="max-w-full max-h-full object-contain"
+              style={{
+                transformOrigin: 'center center',
+                willChange: 'transform',
+                filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))'
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {activeProject && (
         <div className="absolute inset-0 z-30 bg-brand-black text-white flex flex-col md:flex-row animate-fadeIn w-full h-full">
         {/* Top Navigation Bar - 将 CLOSE 移到右上角，与 PREV / NEXT 并列 */}
@@ -478,6 +706,7 @@ const Tech: React.FC = () => {
                       </ul>
                     </div>
                   )}
+
                 </div>
               </div>
             </div>
@@ -564,9 +793,56 @@ const Tech: React.FC = () => {
         </div>
 
         {/* Right Visual Column */}
-        <div className="hidden md:flex w-1/2 h-full relative overflow-hidden items-center justify-center">
+        <div className="hidden md:flex w-1/2 h-full relative overflow-hidden flex-col items-center justify-center">
+          {/* 
+            容器大小保持与视频容器一致（max-w-5xl aspect-video）
+            - qiesax: 可缩放图片（滚轮控制 1x~2x 缩放，放大时可超出容器）
+            - boxofworld: 在容器内部可上下滚动浏览长图
+            - 其他项目: 原有的 YouTube / 视频 / 图片逻辑
+          */}
           <div className="w-full max-w-5xl mx-auto aspect-video flex items-center justify-center">
-            {activeProject.youtubeUrl ? (
+            {ZOOMABLE_IMAGE_PROJECTS[activeProject.id] ? (
+              // ========== 可缩放图片容器 ==========
+              // 滚轮控制缩放，放大时不限制容器大小（overflow-visible）
+              <div 
+                ref={zoomableContainerRef}
+                className="w-full h-full overflow-visible flex items-center justify-center"
+                style={{ boxSizing: 'border-box' }}
+              >
+                <img 
+                  ref={zoomImageRef}
+                  src={ZOOMABLE_IMAGE_PROJECTS[activeProject.id]} 
+                  alt={activeProject.name}
+                  loading="lazy"
+                  decoding="async"
+                  // 图片完整显示，居中对齐，保持宽高比
+                  // 初始缩放为 2x，滚轮向下缩小到 1x
+                  className="max-w-full max-h-full object-contain"
+                  style={{
+                    transformOrigin: 'center center',
+                    willChange: 'transform'
+                  }}
+                />
+              </div>
+            ) : SCROLLABLE_IMAGE_PROJECTS[activeProject.id] ? (
+              // ========== 可滚动长图容器 ==========
+              // 容器尺寸与视频容器一致，内部可上下滚动
+              <div 
+                className="w-full h-full overflow-y-auto overflow-x-hidden"
+                style={{
+                  boxSizing: 'border-box'
+                }}
+              >
+                <img 
+                  src={SCROLLABLE_IMAGE_PROJECTS[activeProject.id]} 
+                  alt={activeProject.name}
+                  loading="lazy"
+                  decoding="async"
+                  // 宽度 100% 适配容器，高度自适应（长图会超出容器高度，触发滚动）
+                  className="w-full h-auto"
+                />
+              </div>
+            ) : activeProject.youtubeUrl ? (
               // 使用 LazyYouTube 组件实现懒加载
               // 进入视口后才加载 YouTube iframe，节省带宽
               (() => {
@@ -603,6 +879,19 @@ const Tech: React.FC = () => {
               />
             )}
           </div>
+          
+          {/* ========== 架构图按钮：视频下方，与视频等宽，左对齐，红色 GitHub 样式 ========== */}
+          {activeProject.technicalDetails?.architectureImage && (
+            <div className="w-full max-w-5xl mx-auto mt-4">
+              <button
+                onClick={() => openArchModal(activeProject.technicalDetails!.architectureImage!)}
+                className="group flex items-center justify-between px-6 py-4 bg-brand-red text-white font-bold text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-black w-full"
+              >
+                <span>View Architecture</span>
+                <span className="transform group-hover:translate-x-2 transition-transform">→</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
       )}

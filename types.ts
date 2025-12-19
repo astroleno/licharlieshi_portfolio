@@ -24,6 +24,8 @@ export interface Project {
     title: string;
     overview: string;
     components?: string[];
+    /** 架构图/流程图路径，点击后弹窗全屏展示（支持缩放） */
+    architectureImage?: string;
   };
   links?: {
     github?: string;
