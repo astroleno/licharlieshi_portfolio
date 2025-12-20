@@ -854,14 +854,10 @@ const Tech: React.FC = () => {
         </div>
 
         {/* Right Visual Column */}
-        {/* dreampillow: 可滚动，视频+架构图垂直排列；其他项目保持居中 */}
-        <div className={`hidden md:flex w-1/2 h-full relative ${
-          activeProject.id === 'dreampillow' 
-            ? 'overflow-y-auto overflow-x-hidden flex-col items-center pt-[15vh]' 
-            : 'overflow-hidden items-center justify-center'
-        }`}>
-          {/* 视频容器 */}
-          <div className={`w-full ${activeProject.id === 'dreampillow' ? 'flex-shrink-0' : ''}`}>
+        {/* 所有项目保持居中布局 */}
+        <div className="hidden md:flex w-1/2 h-full relative overflow-hidden items-center justify-center">
+          {/* 视频容器 - 所有项目统一居中 */}
+          <div className="w-full">
             <div className="w-full max-w-5xl mx-auto aspect-video flex items-center justify-center">
               {/* ========== cstore 特殊处理：直接显示架构图作为主视觉 ========== */}
               {/* 初始 2x 放大，滚轮可缩小，点击打开 Modal 弹窗查看大图 */}
@@ -971,21 +967,23 @@ const Tech: React.FC = () => {
         
           {/* ========== 架构图展示 ========== */}
           {/* cstore: 主视觉已是架构图，不显示 */}
-          {/* dreampillow: 架构图在视频下方，可滚动查看完整内容 */}
+          {/* dreampillow: 架构图绝对定位在底部，预览部分内容，点击打开 modal 查看完整 */}
           {activeProject.id === 'dreampillow' && activeProject.technicalDetails?.architectureImage && (
             <div 
-              className="flex-shrink-0 w-full max-w-5xl mx-auto mt-8 px-4 pb-8 cursor-pointer group"
+              className="absolute bottom-0 left-0 right-0 h-[35vh] cursor-pointer group overflow-hidden"
               onClick={() => openArchModal(activeProject.technicalDetails!.architectureImage!)}
             >
+              {/* 顶部渐变遮罩，与背景融合 */}
+              <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-brand-black to-transparent z-10 pointer-events-none" />
               <img 
                 src={activeProject.technicalDetails.architectureImage}
                 alt={`${activeProject.name} Architecture`}
                 loading="lazy"
                 decoding="async"
-                className="w-full h-auto object-contain transition-opacity group-hover:opacity-90"
+                className="w-full h-auto object-contain object-top transition-opacity group-hover:opacity-90 px-4"
               />
               {/* 悬浮提示 */}
-              <div className="mt-2 text-center text-white/40 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 CLICK TO VIEW FULL SIZE
               </div>
             </div>
