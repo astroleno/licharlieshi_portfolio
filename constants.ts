@@ -130,7 +130,7 @@ export const PROJECTS: Project[] = [
     description: 'Qi(ESax) is a groundbreaking electronic saxophone that introduces the first independent left-right hand control concept in electronic wind instruments. By integrating Trill sensors for timbre switching and pitch bending, combined with accelerometer-based spatial effects, Qi(ESax) opens new dimensions for electronic saxophone performance. This innovative control scheme allows performers to manipulate multiple sound parameters simultaneously, creating expressive possibilities that were previously unavailable in traditional electronic wind instruments.',
     tags: ['SENSOR INTEGRATION', 'PCB DESIGN', 'INTERACTION DESIGN', 'TRILL SENSORS'],
     imageUrl: 'https://picsum.photos/seed/qiesax/1200/800',
-    videoUrl: '/qi.webm'
+    videoUrl: '/QI.webp'
   },
   {
     id: 'boxofworld',
@@ -142,7 +142,7 @@ export const PROJECTS: Project[] = [
     description: 'Box of World is a visual modular-synthesis sandbox that injects controlled randomness to break habitual timbre choices, while serving as an intuitive teaching tool that helps children and beginners quickly grasp synth structure and patching. By combining playful visual design with fundamental synthesis concepts, Box of World boosts creativity, understanding, and fun, making modular synthesis accessible to newcomers while encouraging experienced users to explore beyond their comfort zones.',
     tags: ['CREATIVE CODING', 'VISUAL SYNTHESIS', 'EDUCATION'],
     imageUrl: 'https://picsum.photos/seed/boxofworld/1200/800',
-    videoUrl: '/boxofworld.webm'
+    videoUrl: '/boxofworld.webp'
   },
   {
     id: 'jazzwithli',

@@ -181,13 +181,18 @@ export const STATIC_RESOURCES = {
   // P2: 中优先级视频 - 只预加载 metadata
   // 其他可能用到的视频
   normalPriorityVideos: [
-    '/qi.webm',           // Tech 页面（Qi ESax）
-    '/boxofworld.webm',   // Tech 页面（Box of World）
     '/jazzwithli.webm',   // Tech 页面（Jazz with Li）
     '/live.webm',         // Music 页面
     '/tv.webm',           // Music 页面
     '/games.webm',        // Music 页面
     '/anime.webm'         // Music 页面
+  ],
+  
+  // P2: 中优先级图片 - 预加载完整图片
+  // 已从视频改为图片的项目
+  normalPriorityImages: [
+    '/QI.webp',           // Tech 页面（Qi ESax）- 已改为图片
+    '/boxofworld.webp'    // Tech 页面（Box of World）- 已改为图片
   ]
 };
 
@@ -235,6 +240,12 @@ export const useResourcePreload = (config: ResourcePreloadConfig): void => {
           type: 'video-metadata' as const, 
           src,
           priority: 'P1-high'
+        })),
+        // P2: 中优先级图片（完整预加载）
+        ...(STATIC_RESOURCES.normalPriorityImages || []).map(src => ({ 
+          type: 'image' as const, 
+          src,
+          priority: 'P2-image'
         })),
         // P2: 中优先级视频（metadata）
         ...STATIC_RESOURCES.normalPriorityVideos.map(src => ({ 
@@ -301,6 +312,7 @@ export const useResourcePreload = (config: ResourcePreloadConfig): void => {
       console.log(`[ResourcePreload] - 图片: ${STATIC_RESOURCES.images.length}`);
       console.log(`[ResourcePreload] - 关键视频(完整): ${STATIC_RESOURCES.criticalVideos.length}`);
       console.log(`[ResourcePreload] - 高优先视频(metadata): ${STATIC_RESOURCES.highPriorityVideos.length}`);
+      console.log(`[ResourcePreload] - 中优先图片: ${(STATIC_RESOURCES.normalPriorityImages || []).length}`);
       console.log(`[ResourcePreload] - 中优先视频(metadata): ${STATIC_RESOURCES.normalPriorityVideos.length}`);
       preloadNext();
 

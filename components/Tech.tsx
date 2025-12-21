@@ -8,6 +8,17 @@ const SCROLL_REPEAT_COUNT = 8;
 const PROJECTS_WITHOUT_CTA = new Set(['cstore', 'qiesax', 'jazzwithli', 'boxofworld']);
 
 /**
+ * 判断媒体文件类型：根据文件扩展名判断是视频还是图片
+ * @param url 媒体文件 URL
+ * @returns 如果是视频文件返回 true，否则返回 false
+ */
+const isVideoFile = (url?: string): boolean => {
+  if (!url) return false;
+  const videoExtensions = ['.webm', '.mp4', '.mov', '.avi', '.ogg'];
+  return videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
+};
+
+/**
  * 需要在详情页右侧展示可滚动长图（而非视频）的项目映射表
  * key: 项目 ID
  * value: 对应的图片路径（相对于 public 目录）
@@ -425,9 +436,9 @@ const Tech: React.FC = () => {
     };
   }, [activeProject]);
 
-  // Get current video URL for the right side player
-  // Use hovered project's video, or fall back to the last active one
-  const currentRightVideoUrl = hoveredIndex !== null 
+  // Get current video/image URL for the right side player
+  // Use hovered project's video/image, or fall back to the last active one
+  const currentRightMediaUrl = hoveredIndex !== null 
     ? infiniteProjects[hoveredIndex].videoUrl 
     : lastActiveVideoUrl;
 
@@ -435,22 +446,25 @@ const Tech: React.FC = () => {
     setHeroVideoReady(false);
     setHeroVideoSrc(undefined);
 
-    if (!currentRightVideoUrl) return;
+    if (!currentRightMediaUrl) return;
+    // 如果是图片文件，不需要设置 heroVideoSrc（直接渲染 img 标签）
+    if (!isVideoFile(currentRightMediaUrl)) return;
+    
     if (typeof window === 'undefined') {
-      setHeroVideoSrc(currentRightVideoUrl);
+      setHeroVideoSrc(currentRightMediaUrl);
       return;
     }
 
     const container = heroVideoContainerRef.current;
     if (!container || !('IntersectionObserver' in window)) {
-      setHeroVideoSrc(currentRightVideoUrl);
+      setHeroVideoSrc(currentRightMediaUrl);
       return;
     }
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          setHeroVideoSrc(currentRightVideoUrl);
+          setHeroVideoSrc(currentRightMediaUrl);
           observer.disconnect();
         }
       });
@@ -459,7 +473,7 @@ const Tech: React.FC = () => {
     observer.observe(container);
 
     return () => observer.disconnect();
-  }, [currentRightVideoUrl]);
+  }, [currentRightMediaUrl]);
 
   // Main interface always renders (including hero-work)
   // Detail appears as overlay when activeProject is set
@@ -473,29 +487,41 @@ const Tech: React.FC = () => {
         <ul ref={listRef} className="space-y-2 will-change-transform">
           {infiniteProjects.map((project, index) => (
             <li key={`${project.id}-${index}`} className="relative group overflow-hidden">
-                {/* Background Video for Text Mask Effect - Only active on hover */}
+                {/* Background Video/Image for Text Mask Effect - Only active on hover */}
                 {hoveredIndex === index && project.videoUrl && (
                    <div className="absolute inset-0 z-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-in-out bg-brand-black">
-                     <video 
-                       src={project.videoUrl} 
-                       autoPlay 
-                       loop 
-                       muted 
-                       playsInline 
-                        preload="metadata"
-                       className="w-full h-full object-cover opacity-0 transition-opacity duration-500"
-                       onLoadedMetadata={(e) => {
-                         const video = e.currentTarget;
-                         if (video.duration) {
-                           // Set start time to halfway (offset by half cycle)
-                           video.currentTime = video.duration / 2;
-                         }
-                       }}
-                       onSeeked={(e) => {
-                         // Reveal video only after seek is complete to avoid black frames
-                         e.currentTarget.style.opacity = '1';
-                       }}
-                     />
+                     {/* 视频文件 */}
+                     {isVideoFile(project.videoUrl) ? (
+                       <video 
+                         src={project.videoUrl} 
+                         autoPlay 
+                         loop 
+                         muted 
+                         playsInline 
+                         preload="metadata"
+                         className="w-full h-full object-cover opacity-0 transition-opacity duration-500"
+                         onLoadedMetadata={(e) => {
+                           const video = e.currentTarget;
+                           if (video.duration) {
+                             // Set start time to halfway (offset by half cycle)
+                             video.currentTime = video.duration / 2;
+                           }
+                         }}
+                         onSeeked={(e) => {
+                           // Reveal video only after seek is complete to avoid black frames
+                           e.currentTarget.style.opacity = '1';
+                         }}
+                       />
+                     ) : (
+                       /* 图片文件 */
+                       <img
+                         src={project.videoUrl}
+                         alt={project.name}
+                         loading="lazy"
+                         decoding="async"
+                         className="w-full h-full object-cover opacity-100 transition-opacity duration-500"
+                       />
+                     )}
                   </div>
                 )}
 
@@ -531,14 +557,14 @@ const Tech: React.FC = () => {
         </ul>
       </div>
 
-      {/* Right Visual Area - Video Player */}
+      {/* Right Visual Area - Video/Image Player */}
       <div 
         id="hero-tech"
         ref={heroVideoContainerRef}
         className="hidden md:block w-1/2 h-full bg-brand-black relative transition-all duration-500 ease-in-out overflow-hidden"
       >
          {/* Video Player */}
-         {heroVideoSrc && (
+         {heroVideoSrc && isVideoFile(heroVideoSrc) && (
              <video
                 key={heroVideoSrc}
                 src={heroVideoSrc}
@@ -549,6 +575,19 @@ const Tech: React.FC = () => {
                 preload="auto"
                 onLoadedData={() => setHeroVideoReady(true)}
                 className="w-full h-full object-cover opacity-80 animate-fadeIn"
+             />
+         )}
+         
+         {/* Image Player - 当 mediaUrl 是图片时显示 */}
+         {currentRightMediaUrl && !isVideoFile(currentRightMediaUrl) && (
+             <img
+                key={currentRightMediaUrl}
+                src={currentRightMediaUrl}
+                alt="Project visual"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover opacity-80 animate-fadeIn"
+                onLoad={() => setHeroVideoReady(true)}
              />
          )}
          
@@ -943,7 +982,7 @@ const Tech: React.FC = () => {
                   />
                 );
               })()
-            ) : activeProject.videoUrl ? (
+            ) : activeProject.videoUrl && isVideoFile(activeProject.videoUrl) ? (
               <video 
                 src={activeProject.videoUrl} 
                 autoPlay 
@@ -951,6 +990,14 @@ const Tech: React.FC = () => {
                 muted 
                 playsInline 
                 preload="metadata"
+                className="w-full h-full object-cover"
+              />
+            ) : activeProject.videoUrl ? (
+              <img 
+                src={activeProject.videoUrl} 
+                alt={activeProject.name}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             ) : (
