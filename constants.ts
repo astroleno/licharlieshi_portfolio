@@ -71,7 +71,7 @@ export const PROJECTS: Project[] = [
     },
     tags: ['MACHINE LEARNING', 'CSOUND', 'AUDIO SYNTHESIS', 'PYTHON'],
     imageUrl: 'https://picsum.photos/seed/cstore/1200/800',
-    videoUrl: '/cstore.webm',
+    videoUrl: '/cstore1.webm',
     links: {
       conference: 'https://www.ieeesmc.org/cai-2026/'
     }
@@ -130,7 +130,7 @@ export const PROJECTS: Project[] = [
     description: 'Qi(ESax) is a groundbreaking electronic saxophone that introduces the first independent left-right hand control concept in electronic wind instruments. By integrating Trill sensors for timbre switching and pitch bending, combined with accelerometer-based spatial effects, Qi(ESax) opens new dimensions for electronic saxophone performance. This innovative control scheme allows performers to manipulate multiple sound parameters simultaneously, creating expressive possibilities that were previously unavailable in traditional electronic wind instruments.',
     tags: ['SENSOR INTEGRATION', 'PCB DESIGN', 'INTERACTION DESIGN', 'TRILL SENSORS'],
     imageUrl: 'https://picsum.photos/seed/qiesax/1200/800',
-    videoUrl: '/QI.webp'
+    videoUrl: '/qi1.webm'
   },
   {
     id: 'boxofworld',
@@ -142,7 +142,7 @@ export const PROJECTS: Project[] = [
     description: 'Box of World is a visual modular-synthesis sandbox that injects controlled randomness to break habitual timbre choices, while serving as an intuitive teaching tool that helps children and beginners quickly grasp synth structure and patching. By combining playful visual design with fundamental synthesis concepts, Box of World boosts creativity, understanding, and fun, making modular synthesis accessible to newcomers while encouraging experienced users to explore beyond their comfort zones.',
     tags: ['CREATIVE CODING', 'VISUAL SYNTHESIS', 'EDUCATION'],
     imageUrl: 'https://picsum.photos/seed/boxofworld/1200/800',
-    videoUrl: '/boxofworld.webp'
+    videoUrl: '/boxofworld1.webm'
   },
   {
     id: 'jazzwithli',
@@ -157,7 +157,7 @@ export const PROJECTS: Project[] = [
     description: 'Jazz with Li is a comprehensive MIDI dataset designed to capture the complexity and nuance of advanced jazz music theory. The dataset includes annotated chord progressions, voicings, and modal interchanges. This resource aims to support machine learning research in jazz composition, automatic harmonization, and style transfer, providing a rich foundation for computational approaches to jazz music generation and analysis.',
     tags: ['DATASET CURATION', 'MUSIC THEORY', 'MIDI PROCESSING', 'MACHINE LEARNING'],
     imageUrl: 'https://picsum.photos/seed/jazzwithli/1200/800',
-    videoUrl: '/jazzwithli.webm'
+    videoUrl: '/jazzwithli1.webm'
   }
 ];
 

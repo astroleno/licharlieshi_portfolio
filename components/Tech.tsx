@@ -22,10 +22,13 @@ const isVideoFile = (url?: string): boolean => {
  * 需要在详情页右侧展示可滚动长图（而非视频）的项目映射表
  * key: 项目 ID
  * value: 对应的图片路径（相对于 public 目录）
+ * 
+ * 注释掉：改用视频容器
  */
-const SCROLLABLE_IMAGE_PROJECTS: Record<string, string> = {
-  'boxofworld': '/boxofworld.webp'
-};
+// const SCROLLABLE_IMAGE_PROJECTS: Record<string, string> = {
+//   'boxofworld': '/boxofworld.webp'
+// };
+const SCROLLABLE_IMAGE_PROJECTS: Record<string, string> = {};
 
 /**
  * 需要在详情页右侧展示可缩放图片（滚轮控制缩放，居中对齐）的项目映射表
@@ -38,10 +41,13 @@ const SCROLLABLE_IMAGE_PROJECTS: Record<string, string> = {
  * - 滚轮向上：放大图片
  * - 缩放范围：1x ~ 2x
  * - 放大时不限制容器，可超出边界显示
+ * 
+ * 注释掉：改用视频容器
  */
-const ZOOMABLE_IMAGE_PROJECTS: Record<string, string> = {
-  'qiesax': '/QI.webp'
-};
+// const ZOOMABLE_IMAGE_PROJECTS: Record<string, string> = {
+//   'qiesax': '/QI.webp'
+// };
+const ZOOMABLE_IMAGE_PROJECTS: Record<string, string> = {};
 
 const Tech: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -68,16 +74,15 @@ const Tech: React.FC = () => {
   const detailScrollRef = useRef<HTMLDivElement>(null);
   
   // ========== 可缩放图片相关 ==========
-  // 用于 qiesax 等项目的滚轮缩放效果
+  // 用于 qiesax 等项目的滚轮缩放效果（已注释，改用视频）
   const zoomableContainerRef = useRef<HTMLDivElement>(null);
   const zoomProgressRef = useRef(0);  // 缩放进度 (0-1)
   const zoomImageRef = useRef<HTMLImageElement>(null);
   
-  // ========== cstore 架构图缩放相关 ==========
-  // cstore 项目的架构图也支持缩放（初始 2x，滚轮缩小），同时保留点击进入 modal 的交互
-  const cstoreArchContainerRef = useRef<HTMLDivElement>(null);
-  const cstoreArchImageRef = useRef<HTMLImageElement>(null);
-  const cstoreArchZoomProgressRef = useRef(0);  // cstore 架构图缩放进度 (0-1)
+  // ========== cstore 架构图相关（已废弃，改为和 dreampillow 一致的底部预览方式） ==========
+  // const cstoreArchContainerRef = useRef<HTMLDivElement>(null);
+  // const cstoreArchImageRef = useRef<HTMLImageElement>(null);
+  // const cstoreArchZoomProgressRef = useRef(0);
   
   // ========== 架构图 Modal 弹窗相关 ==========
   // 用于全屏展示 architectureImage 的 Modal 组件
@@ -319,9 +324,9 @@ const Tech: React.FC = () => {
     };
   }, [isArchModalOpen, closeArchModal]);
 
-  // ========== cstore 架构图的滚轮缩放处理 ==========
-  // 初始为最大放大（2x），滚轮向下缩小，向上放大
-  // 保留点击进入 modal 的交互
+  // ========== cstore 架构图的滚轮缩放处理（已废弃） ==========
+  // cstore 改为和 dreampillow 一致的底部预览方式，不再需要独立的缩放处理
+  /*
   useEffect(() => {
     // 只在 cstore 项目且有架构图时启用
     if (!activeProject || activeProject.id !== 'cstore' || !activeProject.technicalDetails?.architectureImage) {
@@ -373,6 +378,7 @@ const Tech: React.FC = () => {
       cstoreArchZoomProgressRef.current = 0;
     };
   }, [activeProject]);
+  */
 
   // ========== 可缩放图片的滚轮事件处理 ==========
   // 参考 Home.tsx 实现：滚轮控制图片缩放
@@ -898,33 +904,9 @@ const Tech: React.FC = () => {
           {/* 视频容器 - 所有项目统一居中 */}
           <div className="w-full">
             <div className="w-full max-w-5xl mx-auto aspect-video flex items-center justify-center">
-              {/* ========== cstore 特殊处理：直接显示架构图作为主视觉 ========== */}
-              {/* 初始 2x 放大，滚轮可缩小，点击打开 Modal 弹窗查看大图 */}
-              {activeProject.id === 'cstore' && activeProject.technicalDetails?.architectureImage ? (
-                <div 
-                  ref={cstoreArchContainerRef}
-                className="w-full h-full overflow-visible flex items-center justify-center cursor-pointer group"
-                onClick={() => openArchModal(activeProject.technicalDetails!.architectureImage!)}
-                style={{ boxSizing: 'border-box' }}
-              >
-                <img 
-                  ref={cstoreArchImageRef}
-                  src={activeProject.technicalDetails.architectureImage}
-                  alt={`${activeProject.name} Architecture`}
-                  loading="lazy"
-                  decoding="async"
-                  className="max-w-full max-h-full object-contain"
-                  style={{
-                    transformOrigin: 'center center',
-                    willChange: 'transform'
-                  }}
-                />
-                {/* 悬浮提示 */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/70 text-white text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
-                  SCROLL TO ZOOM · CLICK TO VIEW FULL SIZE
-                </div>
-              </div>
-            ) : ZOOMABLE_IMAGE_PROJECTS[activeProject.id] ? (
+              {/* ========== cstore 不再特殊处理，改用标准视频容器 ========== */}
+              {/* 架构图改为底部显示（和 dreampillow 一致） */}
+              {ZOOMABLE_IMAGE_PROJECTS[activeProject.id] ? (
               // ========== 可缩放图片容器 ==========
               // 滚轮控制缩放，放大时不限制容器大小（overflow-visible）
               <div 
@@ -1013,15 +995,14 @@ const Tech: React.FC = () => {
           </div>
         
           {/* ========== 架构图展示 ========== */}
-          {/* cstore: 主视觉已是架构图，不显示 */}
-          {/* dreampillow: 架构图绝对定位在底部，预览部分内容，点击打开 modal 查看完整 */}
-          {activeProject.id === 'dreampillow' && activeProject.technicalDetails?.architectureImage && (
+          {/* cstore 和 dreampillow: 架构图绝对定位在底部，预览部分内容，点击打开 modal 查看完整 */}
+          {(activeProject.id === 'cstore' || activeProject.id === 'dreampillow') && activeProject.technicalDetails?.architectureImage && (
             <div 
-              className="absolute bottom-0 left-0 right-0 h-[35vh] cursor-pointer group overflow-hidden"
+              className="absolute bottom-0 left-0 right-0 h-[25vh] cursor-pointer group overflow-hidden"
               onClick={() => openArchModal(activeProject.technicalDetails!.architectureImage!)}
             >
-              {/* 顶部渐变遮罩，与背景融合 */}
-              <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-brand-black to-transparent z-10 pointer-events-none" />
+              {/* 顶部渐变遮罩，与背景融合 - 增加高度以更好地分离视频和架构图 */}
+              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-brand-black to-transparent z-10 pointer-events-none" />
               <img 
                 src={activeProject.technicalDetails.architectureImage}
                 alt={`${activeProject.name} Architecture`}
@@ -1036,8 +1017,8 @@ const Tech: React.FC = () => {
             </div>
           )}
           
-          {/* 其他项目（非 cstore/dreampillow）: 红色按钮 */}
-          {activeProject.id !== 'cstore' && activeProject.id !== 'dreampillow' && activeProject.technicalDetails?.architectureImage ? (
+          {/* 其他项目（非 cstore/dreampillow）: 如果有架构图，显示红色按钮 */}
+          {activeProject.id !== 'cstore' && activeProject.id !== 'dreampillow' && activeProject.technicalDetails?.architectureImage && (
             <div className="w-full max-w-5xl mx-auto mt-4">
               <button
                 onClick={() => openArchModal(activeProject.technicalDetails!.architectureImage!)}
@@ -1047,7 +1028,7 @@ const Tech: React.FC = () => {
                 <span className="transform group-hover:translate-x-2 transition-transform">→</span>
               </button>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
       )}
