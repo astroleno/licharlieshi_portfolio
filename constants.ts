@@ -17,12 +17,12 @@ export const PROJECTS: Project[] = [
     imageUrl: 'https://picsum.photos/seed/pangu/1200/800',
     videoUrl: '/pangu.webm',
     // YouTube 演示视频链接（在 Tech 页面中使用 LazyYouTube 按需加载）
-    // 已根据用户最新要求更新为新的短链接地址
-    youtubeUrl: 'https://youtu.be/dCMUUlnRz4A',
+    // PANGU 项目的完整演示视频（包含播放列表信息）
+    youtubeUrl: 'https://www.youtube.com/watch?v=SbW4J_I4MYo&list=PL-PtPs9ctLuho6d9iaJbYS2LlI-RV7Fjw&index=2',
     links: {
       github: 'https://github.com/CharlieSL1/PanGu-Spatial-Audio-Performance-Control-System',
       // Tech 详情页中的「See it Live」按钮也指向相同的演示视频
-      live: 'https://youtu.be/dCMUUlnRz4A'
+      live: 'https://www.youtube.com/watch?v=SbW4J_I4MYo&list=PL-PtPs9ctLuho6d9iaJbYS2LlI-RV7Fjw&index=2'
     }
   },
   {
@@ -157,7 +157,10 @@ export const PROJECTS: Project[] = [
     description: 'Jazz with Li is a comprehensive MIDI dataset designed to capture the complexity and nuance of advanced jazz music theory. The dataset includes annotated chord progressions, voicings, and modal interchanges. This resource aims to support machine learning research in jazz composition, automatic harmonization, and style transfer, providing a rich foundation for computational approaches to jazz music generation and analysis.',
     tags: ['DATASET CURATION', 'MUSIC THEORY', 'MIDI PROCESSING', 'MACHINE LEARNING'],
     imageUrl: 'https://picsum.photos/seed/jazzwithli/1200/800',
-    videoUrl: '/jazzwithli1.webm'
+    videoUrl: '/jazzwithli1.webm',
+    links: {
+      github: 'https://github.com/CharlieSL1/Jazz_With_Li'
+    }
   }
 ];
 
