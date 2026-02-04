@@ -43,12 +43,18 @@ const requestIdleCallbackPolyfill = (
   callback: IdleRequestCallback,
   options?: IdleRequestOptions
 ): number => {
-  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+  // SSR 环境检查
+  if (typeof window === 'undefined') {
+    return 0;
+  }
+  
+  // 优先使用原生 requestIdleCallback
+  if ('requestIdleCallback' in window) {
     return window.requestIdleCallback(callback, options);
   }
   
   // Fallback: 使用 setTimeout，模拟空闲时间
-  return window.setTimeout(() => {
+  return setTimeout(() => {
     callback({
       didTimeout: false,
       timeRemaining: () => 50 // 假设有 50ms 空闲时间
@@ -60,10 +66,15 @@ const requestIdleCallbackPolyfill = (
  * cancelIdleCallback 的 polyfill
  */
 const cancelIdleCallbackPolyfill = (handle: number): void => {
-  if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+  // SSR 环境检查
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
+  if ('cancelIdleCallback' in window) {
     window.cancelIdleCallback(handle);
   } else {
-    window.clearTimeout(handle);
+    clearTimeout(handle);
   }
 };
 
@@ -90,9 +101,13 @@ const preloadModule = async (
  * 
  * 这些组件使用 React.lazy 动态导入，
  * 预加载后会被浏览器缓存，切换页面时无需重新下载
+ * 
+ * 注意：Tech 组件已在 App.tsx 的 Loading 阶段预加载，
+ * 这里不重复加载，只处理其他页面
  */
 const PRELOAD_MODULES = [
-  { name: 'Tech', importFn: () => import('../components/Tech') },
+  // Tech 已在 Loading 期间预加载，跳过
+  // { name: 'Tech', importFn: () => import('../components/Tech') },
   { name: 'Music', importFn: () => import('../components/Music') },
   { name: 'Story', importFn: () => import('../components/Story') },
   { name: 'Contact', importFn: () => import('../components/Contact') }

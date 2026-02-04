@@ -149,11 +149,12 @@ const preloadVideoFull = (src: string): Promise<void> => {
  * 
  * 策略说明：
  * - 首屏图片（back0/back2/front）已在 usePreloadResources 中处理，这里不重复
+ * - pangu.webm 已在 Loading 阶段完整预加载，这里不重复
  * - 视频分为"完整预加载"和"metadata预加载"两种
  * - 根据页面使用频率和用户行为设计优先级
  * 
  * Tech 页面策略：
- * - P0: pangu.webm 完整预加载（首屏默认显示）
+ * - pangu.webm 已在 Loading 阶段预加载（见 usePreloadResources.ts）
  * - P1: 前几个项目视频 metadata（用户最可能 hover）
  * - P2: 其他视频 metadata
  */
@@ -163,10 +164,10 @@ export const STATIC_RESOURCES = {
     '/back1.webp'  // 备用背景图（如果有使用的话）
   ],
   
-  // P0: 需要完整预加载的关键视频
-  // 这些视频会在页面首屏或核心交互中立即显示
+  // P0: 关键视频已移至 Loading 阶段预加载
+  // pangu.webm 已在 CRITICAL_RESOURCES.videos 中完整预加载
   criticalVideos: [
-    '/pangu.webm'      // Tech 页面首屏默认播放的视频
+    // '/pangu.webm' 已在 Loading 阶段预加载，不重复
   ],
   
   // P1: 高优先级视频 - 只预加载 metadata

@@ -5,13 +5,22 @@
  * 
  * 功能说明：
  * - 管理页面导航和转场动画
- * - 实现首屏资源预加载，Loading 动画期间加载关键图片
+ * - 实现首屏资源预加载，Loading 动画期间加载关键图片和视频
  * - 使用 React.lazy 实现组件懒加载，减少首屏 JS 包大小
  * - 提供 TransitionContext 共享文字显隐状态
  * 
+ * 预加载策略（优化版）：
+ * - Loading 阶段（2.5秒）：
+ *   1. Home 图片（back0/back2/front.webp）
+ *   2. Tech 关键视频（pangu.webm）完整预加载
+ *   3. Tech JS chunk 提前下载
+ * - 首屏完成后 1 秒：预加载 Music/Story/Contact JS chunk
+ * - 首屏完成后 2 秒：预加载其他视频 metadata
+ * 
  * 懒加载策略：
  * - Home: 首屏组件，同步加载
- * - Tech/Music/Story/Contact: 懒加载，用户导航时才加载
+ * - Tech: 懒加载，但 JS chunk 在 Loading 期间已预加载
+ * - Music/Story/Contact: 懒加载，首屏完成后空闲预加载
  * 
  * 转场动画：
  * - 普通页面：红色矩形扩展/收缩动画
@@ -69,11 +78,25 @@ const App: React.FC = () => {
   
   // ========== Loading 状态 ==========
   // 使用预加载 Hook，等待首屏关键资源加载完成
+  // 同时预加载 Home 图片 + Tech 关键视频，用户切换时能秒开
   const { isLoaded: resourcesLoaded, progress } = usePreloadResources({
     images: CRITICAL_RESOURCES.images,
-    timeout: 8000,      // 8 秒超时，避免网络问题阻塞太久
-    minDisplayTime: 1500 // 最少显示 1.5 秒，确保 Loading 动画流畅
+    videos: CRITICAL_RESOURCES.videos,  // Tech 页面关键视频
+    timeout: 12000,      // 12 秒超时（视频需要更多时间）
+    minDisplayTime: 2500 // 最少显示 2.5 秒，确保 Loading 动画流畅 + 预加载完成
   });
+  
+  // ========== 立即预加载 Tech JS chunk ==========
+  // 在 Loading 期间就开始下载 Tech 组件的代码
+  // 这样用户切换到 Tech 时无需等待 JS 加载
+  useEffect(() => {
+    // 立即触发 Tech 组件的动态 import（不等首屏完成）
+    import('./components/Tech').then(() => {
+      console.log('[App] Tech 组件 JS chunk 预加载完成');
+    }).catch(err => {
+      console.warn('[App] Tech 组件 JS chunk 预加载失败:', err);
+    });
+  }, []);
   
   // Loading 显示状态：资源未加载完成时显示
   const displayLoader = !resourcesLoaded;
@@ -82,18 +105,19 @@ const App: React.FC = () => {
   
   // ========== 空闲预加载 ==========
   // 首屏加载完成后，在浏览器空闲时预加载其他页面的 JS chunk
-  // 这样用户切换页面时可以秒开，无需等待加载
+  // 注意：Tech 已在 Loading 期间预加载，这里主要加载 Music/Story/Contact
   useIdlePreload({
     enabled: hasLoaderFinished,  // 首屏加载完成后启用
-    delay: 2000                   // 延迟 2 秒，确保首屏交互流畅
+    delay: 1000                   // 延迟 1 秒（Tech 已预加载，可以更快开始其他页面）
   });
   
   // ========== 静态资源预加载 ==========
   // 在 JS chunk 预加载完成后，继续预加载 public 文件夹中的静态资源
   // 图片：完整预加载 | 视频：只预加载 metadata
+  // 注意：pangu.webm 已在 Loading 阶段完整预加载，这里主要是其他资源
   useResourcePreload({
     enabled: hasLoaderFinished,  // 首屏加载完成后启用
-    delay: 4000                   // 延迟 4 秒，在 JS chunk 预加载之后
+    delay: 2000                   // 延迟 2 秒（关键资源已预加载，可以更快开始）
   });
   
   // ========== 转场状态 ==========
